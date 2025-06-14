@@ -127,10 +127,7 @@ class GridWorld:
         return self.state, reward, self.terminal
 
     def _get_next_state(self, action: Action) -> State:
-        if self.grid[self.get_position(self.state)] in [
-            StateKind.TERMINAL.value,
-            StateKind.CLIFF.value,
-        ]:
+        if self.terminal:
             return self._select_start_state()
         position = self.get_position(self.state)
         new_position = None
@@ -163,6 +160,7 @@ class GridWorld:
         print()
 
 
+# Dumy example
 if __name__ == "__main__":
     config = GridWorldConfig(
         width=5,
