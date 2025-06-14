@@ -46,8 +46,8 @@ class GridWorld:
         self.config = config
         self.random_generator = np.random.default_rng(config.random_seed)
         self.reward_function = config.reward_function
-        self.state = self._select_start_state()
-        self._setup_grid()
+        self.state = self.reset()
+        self.grid = self._setup_grid()
 
     @property
     def width(self) -> int:
@@ -104,23 +104,15 @@ class GridWorld:
         for s in range(self.config.width * self.config.height):
             kind = self.get_kind(s)
             self.grid[self.get_position(s)] = kind.value
+        return self.grid
 
     def _select_start_state(self) -> State:
         assert self.config.start_states, "No start states defined in the configuration."
         return self.random_generator.choice(self.config.start_states)
 
-    def inline_plot(self):
-        current_pos = self.get_position(self.state)
-        for i, row in enumerate(self.grid):
-            row_symbols = []
-            for j, k in enumerate(row):
-                symbol = StateKind(k).name[0]
-                if (i, j) == current_pos:
-                    row_symbols.append(f"[{symbol}]")
-                else:
-                    row_symbols.append(f" {symbol} ")
-            print("".join(row_symbols))
-        print()
+    def reset(self) -> State:
+        self.state = self._select_start_state()
+        return self.state
 
     def step(self, action: Action) -> Tuple[State, Reward, Terminal]:
         self.state = self._get_next_state(action)
@@ -150,6 +142,19 @@ class GridWorld:
         if self.grid[new_position] == StateKind.WALL.value:
             return self.state
         return next_state
+
+    def inline_plot(self):
+        current_pos = self.get_position(self.state)
+        for i, row in enumerate(self.grid):
+            row_symbols = []
+            for j, k in enumerate(row):
+                symbol = StateKind(k).name[0]
+                if (i, j) == current_pos:
+                    row_symbols.append(f"[{symbol}]")
+                else:
+                    row_symbols.append(f" {symbol} ")
+            print("".join(row_symbols))
+        print()
 
 
 if __name__ == "__main__":
