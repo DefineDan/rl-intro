@@ -1,4 +1,10 @@
-from environment_types import Environment, State, Reward, Action, Terminal
+from rl_intro.environment.environment_types import (
+    Environment,
+    State,
+    Reward,
+    Action,
+    Terminal,
+)
 from dataclasses import dataclass
 from typing import Tuple, List, Optional, Literal, Callable
 import numpy as np
