@@ -1,4 +1,4 @@
-from rl_intro.environment.environment_types import (
+from rl_intro.environment.core import (
     Environment,
     State,
     Reward,
