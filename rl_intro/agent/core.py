@@ -21,7 +21,6 @@ class PolicyConfig:
 class AgentConfig:
     state_space: List[State]
     action_space: List[Action]
-    policy_config: PolicyConfig
     random_seed: Optional[int] = None
 
 
