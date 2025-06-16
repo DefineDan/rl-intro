@@ -1,6 +1,7 @@
 from rl_intro.agent.core import AgentConfig, Policy, PolicyConfig, Agent
 from rl_intro.agent.policy import EpsilonGreedyPolicy, EpsilonGreedyConfig
 from rl_intro.agent.agent_q import QLearningAgent, QAgentConfig
+from rl_intro.agent.agent_sarsa import AgentSarsa, AgentSarsaConfig
 from dataclasses import dataclass
 
 
@@ -25,21 +26,19 @@ class AgentFactory:
 
 if __name__ == "__main__":
     # Example usage
-    policy_config = EpsilonGreedyConfig(epsilon=0.1)
-    agent_config = QAgentConfig(
-        state_space=list(range(16)),
-        action_space=list(range(4)),
-        random_seed=42,
-    )
     recipe = AgentRecipe(
-        agent_class=QLearningAgent,
-        agent_config=QAgentConfig(
-            state_space=list(range(16)),
-            action_space=list(range(4)),
+        agent_class=AgentSarsa,
+        agent_config=AgentSarsaConfig(
+            n_states=10,
+            n_actions=4,
             random_seed=42,
+            learning_rate=0.1,
+            discount=0.9,
         ),
         policy_class=EpsilonGreedyPolicy,
         policy_config=EpsilonGreedyConfig(epsilon=0.1),
     )
     agent = AgentFactory.create_agent(recipe)
     print(agent.q)  # Should print the initialized Q-table
+    a = agent.start(0)  # Start with an initial state
+    print(f"Initial action: {a}")  # Should print the initial action chosen by the agent

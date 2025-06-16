@@ -19,7 +19,7 @@ class QLearningAgent(Agent):
         self.last_reward: Optional[Reward] = None
         self.last_state: Optional[State] = None
         self.last_action: Optional[Action] = None
-        self.q = np.zeros((len(config.state_space), len(config.action_space)))
+        self.q = np.zeros((config.n_states, config.n_actions))
         self.random_generator = np.random.default_rng(config.random_seed)
 
     def step(self, state: State, reward: Reward, terminal: Terminal) -> Action:

@@ -19,8 +19,8 @@ class PolicyConfig:
 
 @dataclass
 class AgentConfig:
-    state_space: List[State]
-    action_space: List[Action]
+    n_states: int
+    n_actions: int
     random_seed: Optional[int] = None
 
 
@@ -33,6 +33,10 @@ class Agent(ABC):
         self.policy = policy
 
     @abstractmethod
+    def start(self, state: State) -> Action:
+        pass
+
+    @abstractmethod
     def step(self, state: State, reward: Reward, terminal: Terminal) -> Action:
         pass
 
@@ -42,5 +46,7 @@ class Policy(ABC):
         self.config = config
 
     @abstractmethod
-    def select_action(self, agent: Agent, state: State, reward: Reward) -> Action:
+    def select_action(
+        self, agent: Agent, state: State, reward: Optional[Reward]
+    ) -> Action:
         pass
