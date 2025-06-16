@@ -1,9 +1,9 @@
 from rl_intro.environment.core import (
-    Environment,
     State,
     Reward,
     Action,
     Terminal,
+    EnvironmentConfig,
 )
 from dataclasses import dataclass
 from typing import Tuple, List, Optional, Literal, Callable
@@ -36,14 +36,13 @@ def default_reward_function(state: State, kind: StateKind) -> Reward:
 
 
 @dataclass
-class GridWorldConfig:
+class GridWorldConfig(EnvironmentConfig):
     width: int
     height: int
     start_states: List[State]
     terminal_states: List[State]
     cliff_states: List[State]
     wall_states: List[State]
-    random_seed: Optional[int] = None
     reward_function: Callable[[State, StateKind], Reward] = default_reward_function
 
 
@@ -123,7 +122,6 @@ class GridWorld:
     def step(self, action: Action) -> Tuple[State, Reward, Terminal]:
         self.state = self._get_next_state(action)
         reward = self.reward_function(self.state, self.state_kind)
-        print(reward, self.terminal, self.state_kind)
         return self.state, reward, self.terminal
 
     def _get_next_state(self, action: Action) -> State:
@@ -146,7 +144,7 @@ class GridWorld:
             return self.state
         return next_state
 
-    def inline_plot(self):
+    def print(self):
         current_pos = self.get_position(self.state)
         for i, row in enumerate(self.grid):
             row_symbols = []
@@ -172,8 +170,8 @@ if __name__ == "__main__":
         random_seed=42,
     )
     grid_world = GridWorld(config)
-    grid_world.inline_plot()
+    grid_world.print()
 
     for i in range(5):
         grid_world.step(Act.DOWN.value)
-        grid_world.inline_plot()
+        grid_world.print()
