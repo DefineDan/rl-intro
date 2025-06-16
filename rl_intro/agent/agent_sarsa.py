@@ -49,4 +49,6 @@ class AgentSarsa(Agent):
                 + self.config.discount * self.q[state, action]
                 - self.q[self.last_state, self.last_action]
             )
-        self.q += self.config.learning_rate * td_error
+        self.q[self.last_state, self.last_action] += (
+            self.config.learning_rate * td_error
+        )
