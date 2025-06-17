@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from typing import Tuple, List, Optional, Literal, Callable
 import numpy as np
 from enum import StrEnum, Enum
+from rl_intro.utils.logger import logger
+from rl_intro.utils.visualize import grid_str
 
 
 class StateKind(Enum):
@@ -144,21 +146,15 @@ class GridWorld:
             return self.state
         return next_state
 
-    def print(self):
-        current_pos = self.get_position(self.state)
-        for i, row in enumerate(self.grid):
-            row_symbols = []
-            for j, k in enumerate(row):
-                symbol = StateKind(k).name[0]
-                if (i, j) == current_pos:
-                    row_symbols.append(f"[{symbol}]")
-                else:
-                    row_symbols.append(f" {symbol} ")
-            print("".join(row_symbols))
-        print()
+    def to_str(self) -> str:
+        symbols = np.vectorize(lambda x: StateKind(x).name[0])(self.grid)
+        symbols = np.char.add(" ", np.char.add(symbols, " "))
+        i, j = self.get_position(self.state)
+        symbols[i, j] = f"[{StateKind(self.grid[i, j]).name[0]}]"
+        return grid_str(symbols, self.width, self.height)
 
 
-# Dumy example
+# Dummy example
 if __name__ == "__main__":
     config = GridWorldConfig(
         width=5,
@@ -170,8 +166,8 @@ if __name__ == "__main__":
         random_seed=42,
     )
     grid_world = GridWorld(config)
-    grid_world.print()
+    logger.debug(grid_world.to_str())
 
     for i in range(5):
         grid_world.step(Act.DOWN.value)
-        grid_world.print()
+        logger.debug(grid_world.to_str())
