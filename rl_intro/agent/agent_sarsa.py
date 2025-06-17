@@ -31,7 +31,7 @@ class AgentSarsa(Agent):
         logger.debug(f"AgentSarsa with random seed {config.random_seed} initialized.")
 
     def __str__(self):
-        return f"SarsaAgent(seed={self.config.random_seed}, learning_rate={self.config.learning_rate}, discount={self.config.discount}, policy={self.policy})"
+        return f"SarsaAgent(seed={self.config.random_seed},learning_rate={self.config.learning_rate},discount={self.config.discount},policy={self.policy})"
 
     def start(self, state: State) -> Action:
         action = self.policy.select_action(self, state, None)
@@ -50,9 +50,7 @@ class AgentSarsa(Agent):
         self, state: State, reward: Reward, terminal: Terminal, action: Action
     ) -> None:
         if terminal:
-            td_error = (
-                reward - self.q[self.last_state, self.last_action]
-            )  # TODO: not sure
+            td_error = reward - self.q[self.last_state, self.last_action]
         else:
             td_error = (
                 reward
