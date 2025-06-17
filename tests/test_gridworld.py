@@ -57,7 +57,6 @@ def test_cliff_resets(env: GridWorld) -> None:
 
 def test_reward_function(env: GridWorld) -> None:
     env.state = 11
-    env.inline_plot()
     _, reward, _ = env.step(Act.LEFT.value)
     assert reward == -100.0
     env.state = 11
