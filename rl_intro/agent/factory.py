@@ -3,6 +3,8 @@ from rl_intro.agent.policy import EpsilonGreedyPolicy, EpsilonGreedyConfig
 from rl_intro.agent.agent_q import QLearningAgent, QAgentConfig
 from rl_intro.agent.agent_sarsa import AgentSarsa, AgentSarsaConfig
 from dataclasses import dataclass
+from typing import Optional
+from rl_intro.utils.logger import logger
 
 
 @dataclass
@@ -15,17 +17,20 @@ class AgentRecipe:
 
 class AgentFactory:
     @staticmethod
-    def create_agent(recipe: AgentRecipe) -> Agent:
-        policy = recipe.policy_class(recipe.policy_config)
-        return recipe.agent_class(recipe.agent_config, policy)
+    def create_agent(recipe: AgentRecipe, seed_override: Optional[int] = None) -> Agent:
+        if seed_override is not None:
+            recipe.agent_config.random_seed = seed_override
+        return recipe.agent_class(
+            recipe.agent_config, recipe.policy_class(recipe.policy_config)
+        )
 
     @staticmethod
     def create_agents(recipes: list[AgentRecipe]) -> list[Agent]:
         return [AgentFactory.create_agent(r) for r in recipes]
 
 
+# * Example usage
 if __name__ == "__main__":
-    # Example usage
     recipe = AgentRecipe(
         agent_class=AgentSarsa,
         agent_config=AgentSarsaConfig(
@@ -39,6 +44,5 @@ if __name__ == "__main__":
         policy_config=EpsilonGreedyConfig(epsilon=0.1),
     )
     agent = AgentFactory.create_agent(recipe)
-    print(agent.q)  # Should print the initialized Q-table
-    a = agent.start(0)  # Start with an initial state
-    print(f"Initial action: {a}")  # Should print the initial action chosen by the agent
+    logger.debug(agent)
+    logger.debug(f"Initial action: {agent.start(0)}")
