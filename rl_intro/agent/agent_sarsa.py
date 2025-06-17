@@ -5,6 +5,8 @@ from typing import List, Optional, Protocol
 import numpy as np
 import random
 from rl_intro.utils.math import fair_argmax
+from numpy.typing import NDArray
+from rl_intro.utils.logger import logger
 
 # TODO: fix action space indexing
 
@@ -12,7 +14,7 @@ from rl_intro.utils.math import fair_argmax
 @dataclass
 class AgentSarsaConfig(AgentConfig):
     learning_rate: float = 0.1
-    discount: float = 0.9
+    discount: float = 1.0
 
 
 class AgentSarsa(Agent):
@@ -26,8 +28,16 @@ class AgentSarsa(Agent):
         self.q = np.zeros((self.config.n_states, self.config.n_actions))
         self.random_generator = np.random.default_rng(config.random_seed)
 
+        logger.debug(f"AgentSarsa with random seed {config.random_seed} initialized.")
+
+    def __str__(self):
+        return f"SarsaAgent(seed={self.config.random_seed}, learning_rate={self.config.learning_rate}, discount={self.config.discount}, policy={self.policy})"
+
     def start(self, state: State) -> Action:
-        return self.policy.select_action(self, state, None)
+        action = self.policy.select_action(self, state, None)
+        self.last_state = state
+        self.last_action = action
+        return action
 
     def step(self, state: State, reward: Reward, terminal: Terminal) -> Action:
         action = self.policy.select_action(self, state, reward)

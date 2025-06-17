@@ -43,6 +43,9 @@ class Agent(ABC):
     def get_greedy_actions(self) -> np.ndarray:
         return np.argmax(self.q, axis=1)
 
+    def get_greedy_values(self) -> np.ndarray:
+        return np.max(self.q, axis=1)
+
 
 class Policy(ABC):
     def __init__(self, config: PolicyConfig):
