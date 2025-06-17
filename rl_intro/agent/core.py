@@ -40,6 +40,9 @@ class Agent(ABC):
     def step(self, state: State, reward: Reward, terminal: Terminal) -> Action:
         pass
 
+    def get_greedy_actions(self) -> np.ndarray:
+        return np.argmax(self.q, axis=1)
+
 
 class Policy(ABC):
     def __init__(self, config: PolicyConfig):
@@ -49,4 +52,11 @@ class Policy(ABC):
     def select_action(
         self, agent: Agent, state: State, reward: Optional[Reward]
     ) -> Action:
+        pass
+
+    @abstractmethod
+    def get_distribution(self, agent: Agent) -> NDArray:
+        """
+        Returns a (num_states, num_actions) array where each row is the action distribution for a state.
+        """
         pass
