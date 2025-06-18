@@ -36,6 +36,7 @@ def parse_experiment_data(data: dict) -> ExperimentLog:
         env=data["env"],
         experiment_config=exp_config,
         steps=logs,
+        final_values=data.get("final_values"),
     )
 
 

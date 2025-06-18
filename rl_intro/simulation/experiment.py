@@ -34,6 +34,7 @@ class ExperimentLog:
     env: str
     experiment_config: ExperimentConfig
     steps: list[StepLog]
+    final_values: Optional[list[float]] = None
 
 
 class Experiment:
@@ -71,6 +72,7 @@ class Experiment:
                 logger.warning(
                     f"Agent took too many steps ({self.config.max_steps}) in episode {episode}, resetting."
                 )
+        self.log.final_values = self.agent.get_greedy_values().tolist()
         return self.log
 
     def run(self) -> ExperimentLog:
