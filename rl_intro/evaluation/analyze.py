@@ -9,7 +9,7 @@ from rl_intro.evaluation.data_handling import parse_experiment_json, to_datafram
 plt.style.use("dark_background")
 
 
-def plot_cumulative_reward(df, ax, steps=5000):
+def plot_cumulative_reward(df, ax, steps=-1):
     df["cumulative_reward"] = df["reward"].cumsum()
     fig = ax.figure
     ax.set_title("Cumulative Reward Over Time")
@@ -19,7 +19,11 @@ def plot_cumulative_reward(df, ax, steps=5000):
     ax.plot(
         df.index[:steps],
         df["cumulative_reward"][:steps],
-        label=f"Cumulative Reward (First {steps} Steps)",
+        label=(
+            f"Cumulative Reward (First {steps} Steps)"
+            if steps > 0
+            else "Cumulative Reward"
+        ),
         color="magenta",
     )
     ax.legend()
@@ -27,7 +31,7 @@ def plot_cumulative_reward(df, ax, steps=5000):
     return fig, ax
 
 
-def plot_average_reward_per_episode(df, ax, n_episodes=200):
+def plot_average_reward_per_episode(df, ax, n_episodes=-1):
     grouped_episodes = df.groupby("episode")["reward"].sum().reset_index()
     fig = ax.figure
     ax.set_title("Average Reward Per Episode")
@@ -37,7 +41,11 @@ def plot_average_reward_per_episode(df, ax, n_episodes=200):
     ax.plot(
         grouped_episodes["episode"][:n_episodes],
         grouped_episodes["reward"][:n_episodes],
-        label="Average Reward per Episode",
+        label=(
+            f"Average Reward per Episode ({n_episodes} Episodes)"
+            if n_episodes > 0
+            else "Average Reward per Episode"
+        ),
         color="magenta",
     )
     ax.legend()
