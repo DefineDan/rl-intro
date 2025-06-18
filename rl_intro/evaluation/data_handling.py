@@ -3,6 +3,7 @@ from rl_intro.utils.logger import logger
 import json
 from pathlib import Path
 import pandas as pd
+import re
 
 
 def to_dataframe(experiment_log: ExperimentLog) -> pd.DataFrame:
@@ -50,6 +51,17 @@ def parse_experiment_batch_json(json_file: Path) -> list[ExperimentLog]:
     return [parse_experiment_data(exp) for exp in data]
 
 
+def extract_param(df: pd.DataFrame, col: str, param: str, new_col: str) -> pd.DataFrame:
+    pattern = re.compile(rf"{param}\s*=\s*([^,\)]+)")
+
+    def extract(s):
+        match = pattern.search(s)
+        return match.group(1) if match else None
+
+    df[new_col] = df[col].apply(extract)
+    return df
+
+
 # * Example usage
 if __name__ == "__main__":
     file_path = Path("experiment_logs.json")
@@ -62,4 +74,5 @@ if __name__ == "__main__":
     batch_experiment_logs = parse_experiment_batch_json(file_path)
     logger.debug(batch_experiment_logs[0].agent)
     df_batch = to_dataframe_batch(batch_experiment_logs)
+    extract_param(df_batch, "agent", "seed", "agent_seed")
     logger.debug(df_batch.head())
