@@ -21,6 +21,8 @@ class PolicyConfig:
 class AgentConfig:
     n_states: int
     n_actions: int
+    learning_rate: float = 0.1
+    discount: float = 1.0
     random_seed: Optional[int] = None
 
 
