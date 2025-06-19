@@ -21,13 +21,13 @@ def _process_series(series, interval=None, running_mean=None):
 
 
 def plot_cumulative_reward(
-    results: Dict[str, AnalysisResult],
+    results: list[AnalysisResult],
     ax,
     interval: Optional[tuple[int, int]] = None,
     running_mean: Optional[int] = None,
 ):
     """Plot cumulative reward time series for each agent/result, with optional running mean."""
-    for agent, res in results.items():
+    for res in results:
         steps = _process_series(
             res.cumulative_reward["global_step"], interval, running_mean
         )
@@ -37,7 +37,7 @@ def plot_cumulative_reward(
         # If running_mean is used, steps and rewards may be different lengths; align steps
         if running_mean is not None and running_mean > 1:
             steps = steps[: len(rewards)]
-        ax.plot(steps, rewards, label=shorten_agent_name(agent), alpha=1.0)
+        ax.plot(steps, rewards, label=shorten_agent_name(res.agent), alpha=1.0)
     ax.set_title("Cumulative Reward Over Time")
     ax.set_xlabel("Steps")
     ax.set_ylabel("Cumulative Reward")
@@ -47,13 +47,13 @@ def plot_cumulative_reward(
 
 
 def plot_average_reward_per_episode(
-    results: Dict[str, AnalysisResult],
+    results: list[AnalysisResult],
     ax,
     interval: Optional[tuple[int, int]] = None,
     running_mean: Optional[int] = None,
 ):
     """Plot average reward per episode for each agent/result, with optional running mean."""
-    for agent, res in results.items():
+    for res in results:
         episodes = _process_series(
             res.episodic_rewards["episode"], interval, running_mean
         )
@@ -62,7 +62,7 @@ def plot_average_reward_per_episode(
         )
         if running_mean is not None and running_mean > 1:
             episodes = episodes[: len(rewards)]
-        ax.plot(episodes, rewards, label=shorten_agent_name(agent), alpha=0.9)
+        ax.plot(episodes, rewards, label=shorten_agent_name(res.agent), alpha=0.9)
     ax.set_title("Average Reward Per Episode")
     ax.set_xlabel("Episode")
     ax.set_ylabel("Average Reward")
@@ -110,15 +110,14 @@ if __name__ == "__main__":
 
     n_rows, n_cols = 4, 10
     analysis = analyze_experiments(batch_experiment_logs, n_rows=n_rows, n_cols=n_cols)
-    agents = list(analysis.keys())
 
     fig, ax = plt.subplots(3, 2, figsize=(12, 10))
     ax = ax.flatten()
     plot_cumulative_reward(analysis, ax[0], interval=(0, 20000))
     plot_average_reward_per_episode(analysis, ax[1], interval=(0, 300))
-    plot_final_values(analysis[agents[0]], ax[2])
-    plot_final_values(analysis[agents[1]], ax[3])
-    plot_state_visit_frequency(analysis[agents[0]], ax[4])
-    plot_state_visit_frequency(analysis[agents[1]], ax[5])
+    plot_final_values(analysis[0], ax[2])
+    plot_final_values(analysis[1], ax[3])
+    plot_state_visit_frequency(analysis[0], ax[4])
+    plot_state_visit_frequency(analysis[1], ax[5])
     plt.tight_layout()
     plt.show()

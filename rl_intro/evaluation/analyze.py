@@ -114,13 +114,13 @@ def analyze_experiment_group(
 
 def analyze_experiments(
     experiments: list[ExperimentLog], n_rows: int, n_cols: int
-) -> dict[str, AnalysisResult]:
+) -> list[AnalysisResult]:
     """Analyze a list of ExperimentLog objects, grouping by agent and averaging results."""
     grouped_experiments = group_by_agent(experiments)
-    return {
-        agent: analyze_experiment_group(exp_group, n_rows, n_cols)
-        for agent, exp_group in grouped_experiments.items()
-    }
+    return [
+        analyze_experiment_group(exp_group, n_rows, n_cols)
+        for exp_group in grouped_experiments.values()
+    ]
 
 
 if __name__ == "__main__":
