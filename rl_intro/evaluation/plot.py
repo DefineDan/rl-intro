@@ -1,67 +1,82 @@
-from typing import Optional
+from typing import Optional, Dict, List
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-from pathlib import Path
-from rl_intro.simulation.experiment import ExperimentLog
-from rl_intro.evaluation.parse import parse_experiment_json, to_dataframe
+from rl_intro.evaluation.analyze import AnalysisResult
 
 plt.style.use("dark_background")
 
 
-def plot_cumulative_reward(df, ax, steps=-1):
-    df["cumulative_reward"] = df["reward"].cumsum()
-    fig = ax.figure
+def shorten_agent_name(agent: str) -> str:
+    return agent.split("(")[0]
+
+
+def _process_series(series, interval=None, running_mean=None):
+    """Utility to slice and smooth a 1D numpy array or pandas Series."""
+    if interval:
+        start, end = interval
+        series = series[start:end]
+    if running_mean is not None and running_mean > 1:
+        series = np.convolve(series, np.ones(running_mean) / running_mean, mode="valid")
+    return series
+
+
+def plot_cumulative_reward(
+    results: Dict[str, AnalysisResult],
+    ax,
+    interval: Optional[tuple[int, int]] = None,
+    running_mean: Optional[int] = None,
+):
+    """Plot cumulative reward time series for each agent/result, with optional running mean."""
+    for agent, res in results.items():
+        steps = _process_series(
+            res.cumulative_reward["global_step"], interval, running_mean
+        )
+        rewards = _process_series(
+            res.cumulative_reward["cumulative_reward"], interval, running_mean
+        )
+        # If running_mean is used, steps and rewards may be different lengths; align steps
+        if running_mean is not None and running_mean > 1:
+            steps = steps[: len(rewards)]
+        ax.plot(steps, rewards, label=shorten_agent_name(agent), alpha=1.0)
     ax.set_title("Cumulative Reward Over Time")
     ax.set_xlabel("Steps")
     ax.set_ylabel("Cumulative Reward")
     ax.grid(True, alpha=0.2)
-    ax.plot(
-        df.index[:steps],
-        df["cumulative_reward"][:steps],
-        label=(
-            f"Cumulative Reward (First {steps} Steps)"
-            if steps > 0
-            else "Cumulative Reward"
-        ),
-        color="magenta",
-    )
     ax.legend()
-    plt.tight_layout()
-    return fig, ax
+    return ax.get_figure(), ax
 
 
-def plot_average_reward_per_episode(df, ax, n_episodes=-1):
-    grouped_episodes = df.groupby("episode")["reward"].sum().reset_index()
-    fig = ax.figure
+def plot_average_reward_per_episode(
+    results: Dict[str, AnalysisResult],
+    ax,
+    interval: Optional[tuple[int, int]] = None,
+    running_mean: Optional[int] = None,
+):
+    """Plot average reward per episode for each agent/result, with optional running mean."""
+    for agent, res in results.items():
+        episodes = _process_series(
+            res.episodic_rewards["episode"], interval, running_mean
+        )
+        rewards = _process_series(
+            res.episodic_rewards["reward"], interval, running_mean
+        )
+        if running_mean is not None and running_mean > 1:
+            episodes = episodes[: len(rewards)]
+        ax.plot(episodes, rewards, label=shorten_agent_name(agent), alpha=0.9)
     ax.set_title("Average Reward Per Episode")
     ax.set_xlabel("Episode")
     ax.set_ylabel("Average Reward")
     ax.grid(True, alpha=0.2)
-    ax.plot(
-        grouped_episodes["episode"][:n_episodes],
-        grouped_episodes["reward"][:n_episodes],
-        label=(
-            f"Average Reward per Episode ({n_episodes} Episodes)"
-            if n_episodes > 0
-            else "Average Reward per Episode"
-        ),
-        color="magenta",
-    )
     ax.legend()
-    plt.tight_layout()
-    return fig, ax
+    return ax.get_figure(), ax
 
 
-def plot_final_values(final_values, w=10, h=4, ax=None):
-    values = np.array(final_values).reshape((h, w))
-    if ax is None:
-        fig, ax = plt.subplots()
-    else:
-        fig = ax.figure
+def plot_final_values(result: AnalysisResult, ax):
+    """Display the final values matrix for a single result."""
+    values = result.final_values
     cax = ax.imshow(values, cmap="viridis", interpolation="nearest")
-    for i in range(h):
-        for j in range(w):
+    for i in range(values.shape[0]):
+        for j in range(values.shape[1]):
             val = values[i, j]
             ax.text(
                 j,
@@ -71,83 +86,39 @@ def plot_final_values(final_values, w=10, h=4, ax=None):
                 va="center",
                 color="white" if val < 0.5 else "black",
             )
-    ax.set_title("Final Values")
-    plt.colorbar(cax, ax=ax, orientation="horizontal")
-    plt.tight_layout()
-    return fig, ax
+    ax.set_title(f"Final Values: {shorten_agent_name(result.agent)}")
+    ax.figure.colorbar(cax, ax=ax, orientation="horizontal")
+    return ax.get_figure(), ax
 
 
-def plot_state_visit_frequency(df, w=10, h=4, ax=None):
-    state_visit_freq = df.groupby("state").size().reset_index(name="num_visits")
-    visit_array = np.zeros((h, w))
-    for _, row in state_visit_freq.iterrows():
-        state = row["state"]
-        visits = row["num_visits"]
-        pos = state // w, state % w
-        visit_array[pos] = visits
-    if ax is None:
-        fig, ax = plt.subplots()
-    else:
-        fig = ax.figure
+def plot_state_visit_frequency(result: AnalysisResult, ax):
+    """Display the state visit frequency matrix for a single result."""
+    visit_array = result.visit_matrix
     cax = ax.imshow(visit_array, cmap="viridis", interpolation="nearest")
-    plt.colorbar(cax, ax=ax, orientation="horizontal")
-    ax.set_title("State Visit Frequency")
-    plt.tight_layout()
-    return fig, ax
-
-
-def generate_experiment_report(
-    df, final_values=None, w=10, h=4, save_dir: Optional[Path] = None, combined=False
-):
-    def save_figure(fig, name):
-        if save_dir and not combined:
-            fig.savefig(save_dir / f"{name}.png")
-
-    if save_dir is not None:
-        save_dir.mkdir(parents=True, exist_ok=True)
-
-    if combined:
-        fig, axs = plt.subplots(2, 2, figsize=(16, 10))
-        ax1, ax2, ax3, ax4 = axs.flatten()
-        fig1 = fig2 = fig3 = fig4 = fig
-    else:
-        fig1, ax1 = plt.subplots(figsize=(12, 5))
-        fig2, ax2 = plt.subplots(figsize=(12, 5))
-        fig3, ax3 = plt.subplots(figsize=(12, 5))
-        fig4, ax4 = (
-            plt.subplots(figsize=(10, 5)) if final_values is not None else (None, None)
-        )
-
-    plot_cumulative_reward(df, ax1)
-    save_figure(fig1, "cumulative_reward")
-
-    plot_average_reward_per_episode(df, ax2)
-    save_figure(fig2, "average_reward_per_episode")
-
-    plot_state_visit_frequency(df, w=w, h=h, ax=ax3)
-    save_figure(fig3, "state_visit_frequency")
-
-    if final_values is not None:
-        plot_final_values(final_values, w=w, h=h, ax=ax4)
-        save_figure(fig4, "final_values")
-
-    if combined and save_dir is not None:
-        fig1.savefig(save_dir / "combined.png")
-
-    plt.show()
-
-
-def main():
-    experiment_json = Path("experiment_logs.json")
-    log = parse_experiment_json(experiment_json)
-    df = to_dataframe(log)
-    generate_experiment_report(
-        df,
-        final_values=log.final_values,
-        save_dir=Path("data_out"),
-        combined=True,
-    )
+    ax.figure.colorbar(cax, ax=ax, orientation="horizontal")
+    ax.set_title(f"State Visit Frequency: {shorten_agent_name(result.agent)}")
+    return ax.get_figure(), ax
 
 
 if __name__ == "__main__":
-    main()
+    from pathlib import Path
+    from rl_intro.evaluation.parse import parse_experiment_batch_json
+    from rl_intro.evaluation.analyze import analyze_experiments
+
+    file_path = Path(__file__).parent.parent.parent / "data/experiment_batch_logs.json"
+    batch_experiment_logs = parse_experiment_batch_json(file_path)
+
+    n_rows, n_cols = 4, 10
+    analysis = analyze_experiments(batch_experiment_logs, n_rows=n_rows, n_cols=n_cols)
+    agents = list(analysis.keys())
+
+    fig, ax = plt.subplots(3, 2, figsize=(12, 10))
+    ax = ax.flatten()
+    plot_cumulative_reward(analysis, ax[0], interval=(0, 20000))
+    plot_average_reward_per_episode(analysis, ax[1], interval=(0, 300))
+    plot_final_values(analysis[agents[0]], ax[2])
+    plot_final_values(analysis[agents[1]], ax[3])
+    plot_state_visit_frequency(analysis[agents[0]], ax[4])
+    plot_state_visit_frequency(analysis[agents[1]], ax[5])
+    plt.tight_layout()
+    plt.show()

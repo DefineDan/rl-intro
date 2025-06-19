@@ -36,6 +36,7 @@ def calc_state_visit_frequency(df: pd.DataFrame, n_states: int) -> pd.DataFrame:
 def gen_state_visit_frequency_matrix(
     df: pd.DataFrame, n_rows: int, n_cols: int
 ) -> np.ndarray:
+    # TODO: normalize by time steps?
     state_visits = calc_state_visit_frequency(df, n_rows * n_cols)
     visit_matrix = state_visits["num_visits"].to_numpy().reshape((n_rows, n_cols))
     return visit_matrix
