@@ -19,6 +19,9 @@ class RandomPolicy(Policy):
             1.0 / agent.config.n_actions,
         )
 
+    def get_state_distribution(self, agent: Agent, state: State) -> np.ndarray:
+        return np.full(agent.config.n_actions, 1.0 / agent.config.n_actions)
+
 
 @dataclass
 class EpsilonGreedyConfig(PolicyConfig):
@@ -45,10 +48,6 @@ class EpsilonGreedyPolicy(Policy):
             return action
 
     def get_distribution(self, agent: Agent) -> np.ndarray:
-        """
-        Returns a (num_states, num_actions) array where each row is the action distribution for a state.
-        Breaks ties for best actions fairly.
-        """
         n_states = agent.config.n_states
         n_actions = agent.config.n_actions
         distribution = np.full((n_states, n_actions), self.config.epsilon / n_actions)
@@ -60,4 +59,14 @@ class EpsilonGreedyPolicy(Policy):
             distribution[s, best_actions] += (1 - self.config.epsilon) / len(
                 best_actions
             )
+        return distribution
+
+    def get_state_distribution(self, agent: Agent, state: State) -> np.ndarray:
+        n_actions = agent.config.n_actions
+        distribution = np.full(n_actions, self.config.epsilon / n_actions)
+
+        max_q = np.max(agent.q[state])
+        best_actions = np.flatnonzero(agent.q[state] == max_q)
+        distribution[best_actions] += (1 - self.config.epsilon) / len(best_actions)
+
         return distribution

@@ -65,3 +65,10 @@ class Policy(ABC):
         Returns a (num_states, num_actions) array where each row is the action distribution for a state.
         """
         pass
+
+    @abstractmethod
+    def get_state_distribution(self, agent: Agent, state: State) -> np.ndarray:
+        """
+        Returns the action distribution for a specific state.
+        """
+        pass
