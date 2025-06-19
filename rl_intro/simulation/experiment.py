@@ -30,23 +30,33 @@ class StepLog:
 
 @dataclass
 class ExperimentLog:
+    id: int
     agent: str
     env: str
     experiment_config: ExperimentConfig
     steps: list[StepLog]
     final_values: Optional[list[float]] = None
+    seed: Optional[int] = None
 
 
 class Experiment:
-    def __init__(self, agent: Agent, env: Environment, config: ExperimentConfig):
+    def __init__(
+        self,
+        agent: Agent,
+        env: Environment,
+        config: ExperimentConfig,
+        id: int = 0,
+    ):
         self.agent = agent
         self.env = env
         self.config = config
         self.log = ExperimentLog(
+            id=id,
             agent=str(agent),
             env=str(env),
             experiment_config=self.config,
             steps=[],
+            seed=agent.config.random_seed,
         )
 
     def run_episodes(self, n_episodes: int, max_steps: int) -> ExperimentLog:
@@ -107,7 +117,7 @@ class ExperimentBatch:
                     agent = AgentFactory.create_agent(
                         agent_recipe, seed_override=random_seed
                     )
-                    experiment = Experiment(agent, env, experiment_config)
+                    experiment = Experiment(agent, env, experiment_config, id=i_run)
                     logger.info(
                         f"Running experiment {i_run + 1}/{self.n_runs} with agent {agent} and environment {env}."
                     )
@@ -125,8 +135,10 @@ if __name__ == "__main__":
 
     from rl_intro.environment.gridworld import GridWorld, GridWorldConfig
     from rl_intro.agent.policy import EpsilonGreedyPolicy, EpsilonGreedyConfig
+    from pathlib import Path
 
     w, h = 10, 4
+    out_dir = Path(__file__).parent.parent.parent / "data"
 
     env_config = GridWorldConfig(
         width=w,
@@ -167,7 +179,7 @@ if __name__ == "__main__":
     logger.debug(grid_str(agent.get_greedy_values(), w, h))
 
     # save the logs as a json file
-    with open("experiment_logs.json", "w") as f:
+    with open(out_dir / "experiment_logs.json", "w") as f:
         json.dump(asdict(experiment_log), f, indent=4)
     logger.info("Experiment completed and logs saved to 'experiment_logs.json'.")
 
@@ -190,7 +202,7 @@ if __name__ == "__main__":
     logs = experiment_batch.run()
     # Save all logs to a JSON file
 
-    with open("experiment_batch_logs.json", "w") as f:
+    with open(out_dir / "experiment_batch_logs.json", "w") as f:
         json.dump(
             [asdict(log) for log in logs], f, indent=4, default=lambda o: o.__dict__
         )

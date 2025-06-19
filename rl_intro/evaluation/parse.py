@@ -8,7 +8,7 @@ import re
 
 def to_dataframe(experiment_log: ExperimentLog) -> pd.DataFrame:
     rows = []
-    for step in experiment_log.steps:
+    for i, step in enumerate(experiment_log.steps):
         row = {
             "agent": experiment_log.agent,
             "env": experiment_log.env,
@@ -18,13 +18,14 @@ def to_dataframe(experiment_log: ExperimentLog) -> pd.DataFrame:
             "state": step.state,
             "reward": step.reward,
             "terminal": step.terminal,
+            "global_step": i,
         }
         rows.append(row)
     return pd.DataFrame(rows)
 
 
-def to_dataframe_batch(experiment_logs: list[ExperimentLog]) -> pd.DataFrame:
-    return pd.concat([to_dataframe(log) for log in experiment_logs], ignore_index=True)
+def to_dataframe_batch(experiment_logs: list[ExperimentLog]) -> list[pd.DataFrame]:
+    return [to_dataframe(log) for log in experiment_logs]
 
 
 def parse_experiment_data(data: dict) -> ExperimentLog:
@@ -32,11 +33,13 @@ def parse_experiment_data(data: dict) -> ExperimentLog:
     logs = [StepLog(**step) for step in data["steps"]]
     exp_config = ExperimentConfig(**data["experiment_config"])
     return ExperimentLog(
+        id=data["id"],
         agent=data["agent"],
         env=data["env"],
         experiment_config=exp_config,
         steps=logs,
         final_values=data.get("final_values"),
+        seed=data.get("seed"),
     )
 
 
@@ -74,6 +77,6 @@ if __name__ == "__main__":
     file_path = Path("experiment_batch_logs.json")
     batch_experiment_logs = parse_experiment_batch_json(file_path)
     logger.debug(batch_experiment_logs[0].agent)
-    df_batch = to_dataframe_batch(batch_experiment_logs)
+    df_batch = pd.concat(to_dataframe_batch(batch_experiment_logs))
     extract_param(df_batch, "agent", "seed", "agent_seed")
     logger.debug(df_batch.head())
