@@ -69,9 +69,10 @@ class Experiment:
                 if terminal:
                     break
             else:
-                logger.warning(
-                    f"Agent took too many steps ({self.config.max_steps}) in episode {episode}, resetting."
-                )
+                # logger.warning(
+                #     f"Agent took too many steps ({self.config.max_steps}) in episode {episode}, resetting."
+                # )
+                pass
         self.log.final_values = self.agent.get_greedy_values().tolist()
         return self.log
 
@@ -117,7 +118,11 @@ class ExperimentBatch:
 
 if __name__ == "__main__":
     # Example usage
-    from rl_intro.agent.agent_sarsa import AgentSarsa, AgentSarsaConfig
+    from rl_intro.agent.core import AgentConfig
+    from rl_intro.agent.agent_sarsa import AgentSarsa
+    from rl_intro.agent.agent_q_learning import AgentQLearning
+    from rl_intro.agent.agent_expected_sarsa import AgentExpectedSarsa
+
     from rl_intro.environment.gridworld import GridWorld, GridWorldConfig
     from rl_intro.agent.policy import EpsilonGreedyPolicy, EpsilonGreedyConfig
 
@@ -127,21 +132,21 @@ if __name__ == "__main__":
         width=w,
         height=h,
         start_states=[0],
-        terminal_states=[9],
-        cliff_states=[1, 2, 3, 4, 5, 6, 7, 8],
-        wall_states=[],
+        terminal_states=[39],
+        cliff_states=[4, 24, 5, 25],
+        wall_states=[2, 12, 22, 17, 27, 37],
         random_seed=42,
     )
     env = GridWorld(env_config)
 
-    agent_config = AgentSarsaConfig(
+    agent_config = AgentConfig(
         n_states=w * h,
         n_actions=len(env.action_space),
         random_seed=42,
         learning_rate=0.3,
         discount=1.0,
     )
-    agent = AgentSarsa(
+    agent = AgentExpectedSarsa(
         agent_config, EpsilonGreedyPolicy(EpsilonGreedyConfig(epsilon=0.1))
     )
     experiment_config = ExperimentConfig(n_episodes=1000, max_steps=200)
@@ -167,7 +172,7 @@ if __name__ == "__main__":
     logger.info("Experiment completed and logs saved to 'experiment_logs.json'.")
 
     agent_recipe = AgentRecipe(
-        agent_class=AgentSarsa,
+        agent_class=AgentExpectedSarsa,
         agent_config=agent_config,
         policy_class=EpsilonGreedyPolicy,
         policy_config=EpsilonGreedyConfig(epsilon=0.1),

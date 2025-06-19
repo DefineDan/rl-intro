@@ -11,17 +11,18 @@ from rl_intro.agent.core import Agent, AgentConfig, Policy
 
 
 class DummyPolicy(Policy):
-    def __init__(self):
-        super().__init__(PolicyConfig())
-
     def select_action(self, agent, state, reward):
-        return 0
+        return 0  # Always return action 0
 
     def get_distribution(self, agent):
+        # Return uniform distribution as a stub
         return (
             np.ones((agent.config.n_states, agent.config.n_actions))
             / agent.config.n_actions
         )
+
+    def get_state_distribution(self, agent, state):
+        return np.ones(agent.config.n_actions) / agent.config.n_actions
 
 
 class DummyAgent(Agent):
@@ -29,7 +30,7 @@ class DummyAgent(Agent):
         self.config = AgentConfig(
             n_states=n_states, n_actions=n_actions, random_seed=41
         )
-        self.policy = DummyPolicy()
+        self.policy = DummyPolicy(PolicyConfig())
         self.q = np.zeros((n_states, n_actions)) if q is None else q
         self.random_generator = random_generator or np.random.default_rng(
             self.config.random_seed

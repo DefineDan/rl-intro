@@ -1,7 +1,5 @@
 from rl_intro.agent.core import AgentConfig, Policy, PolicyConfig, Agent
 from rl_intro.agent.policy import EpsilonGreedyPolicy, EpsilonGreedyConfig
-from rl_intro.agent.agent_q import QLearningAgent, QAgentConfig
-from rl_intro.agent.agent_sarsa import AgentSarsa, AgentSarsaConfig
 from dataclasses import dataclass
 from typing import Optional
 from rl_intro.utils.logger import logger
@@ -31,9 +29,11 @@ class AgentFactory:
 
 # * Example usage
 if __name__ == "__main__":
+    from rl_intro.agent.agent_sarsa import AgentSarsa
+
     recipe = AgentRecipe(
         agent_class=AgentSarsa,
-        agent_config=AgentSarsaConfig(
+        agent_config=AgentConfig(
             n_states=10,
             n_actions=4,
             random_seed=42,

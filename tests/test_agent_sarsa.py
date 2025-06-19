@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from rl_intro.agent.agent_sarsa import AgentSarsa, AgentSarsaConfig
+from rl_intro.agent.agent_sarsa import AgentSarsa, AgentConfig
 from rl_intro.agent.core import Policy, PolicyConfig
 from rl_intro.environment.core import State, Action, Reward, Terminal
 
@@ -16,9 +16,12 @@ class DummyPolicy(Policy):
             / agent.config.n_actions
         )
 
+    def get_state_distribution(self, agent, state):
+        return np.ones(agent.config.n_actions) / agent.config.n_actions
+
 
 def make_agent(n_states=3, n_actions=2, seed=42):
-    config = AgentSarsaConfig(n_states=n_states, n_actions=n_actions, random_seed=seed)
+    config = AgentConfig(n_states=n_states, n_actions=n_actions, random_seed=seed)
     return AgentSarsa(config, DummyPolicy(PolicyConfig()))
 
 
