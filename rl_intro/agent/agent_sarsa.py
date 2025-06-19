@@ -19,7 +19,7 @@ class AgentSarsa(Agent):
         logger.debug(self.__str__() + " initialized.")
 
     def __str__(self):
-        return f"AgentSarsa(seed={self.config.random_seed},learning_rate={self.config.learning_rate},discount={self.config.discount},policy={self.policy})"
+        return f"AgentSarsa(learning_rate={self.config.learning_rate},discount={self.config.discount},policy={self.policy})"
 
     def start(self, state: State) -> Action:
         action = self.policy.select_action(self, state, None)

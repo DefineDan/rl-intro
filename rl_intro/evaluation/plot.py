@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from rl_intro.simulation.experiment import ExperimentLog
-from rl_intro.evaluation.data_handling import parse_experiment_json, to_dataframe
+from rl_intro.evaluation.parse import parse_experiment_json, to_dataframe
 
 plt.style.use("dark_background")
 

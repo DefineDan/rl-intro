@@ -8,6 +8,9 @@ from rl_intro.utils.math import fair_argmax
 
 
 class RandomPolicy(Policy):
+    def __str__(self):
+        return "RandomPolicy()"
+
     def select_action(
         self, agent: Agent, state: State, reward: Optional[Reward]
     ) -> Action:

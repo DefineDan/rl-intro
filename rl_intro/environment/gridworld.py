@@ -57,7 +57,7 @@ class GridWorld:
         self.grid = self._setup_grid()
 
     def __str__(self):
-        return f"GridWorld(seed={self.config.random_seed},w={self.config.width},h={self.config.height},s={self.config.start_states},t={self.config.terminal_states},c={self.config.cliff_states},w={self.config.wall_states})"
+        return f"GridWorld(w={self.config.width},h={self.config.height},s={self.config.start_states},t={self.config.terminal_states},c={self.config.cliff_states},w={self.config.wall_states})"
 
     @property
     def width(self) -> int:
