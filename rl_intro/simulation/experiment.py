@@ -117,7 +117,9 @@ class ExperimentBatch:
                     agent = AgentFactory.create_agent(
                         agent_recipe, seed_override=random_seed
                     )
-                    experiment = Experiment(agent, env, experiment_config, id=i_run)
+                    experiment = Experiment(
+                        agent, env, self.experiment_config, id=i_run
+                    )
                     logger.info(
                         f"Running experiment {i_run + 1}/{self.n_runs} with agent {agent} and environment {env}."
                     )

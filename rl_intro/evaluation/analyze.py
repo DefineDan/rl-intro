@@ -113,10 +113,16 @@ def analyze_experiment_group(
 
 
 def analyze_experiments(
-    experiments: list[ExperimentLog], n_rows: int, n_cols: int
+    experiments: list[ExperimentLog],
+    n_rows: int,
+    n_cols: int,
+    agent_grouping: bool = True,
 ) -> list[AnalysisResult]:
     """Analyze a list of ExperimentLog objects, grouping by agent and averaging results."""
-    grouped_experiments = group_by_agent(experiments)
+    if agent_grouping:
+        grouped_experiments = group_by_agent(experiments)
+    else:
+        grouped_experiments = {f"agent_{i}": [exp] for i, exp in enumerate(experiments)}
     return [
         analyze_experiment_group(exp_group, n_rows, n_cols)
         for exp_group in grouped_experiments.values()
