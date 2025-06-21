@@ -125,7 +125,7 @@ def analyze(log_file: Path):
 if __name__ == "__main__":
     logger.setLevel("INFO")
     out_dir.mkdir(parents=True, exist_ok=True)
-    save_path = out_dir / "single_experiment_logs.json"
+    save_path = out_dir / "multi_experiment_logs.json"
 
     run_experiment(save_path)
     analyze(save_path)
