@@ -1,3 +1,5 @@
+import { renderGridworld } from './gridworld_view.js';
+
 // Dynamically load Pyodide and use loadPyodide from the global scope
 async function loadPyodideScript() {
   if (!window.loadPyodide) {
@@ -84,13 +86,14 @@ output = "\\n\\n".join(log)
   // Access Python objects from JS
   const agent = pyodide.globals.get("agent");
   const env = pyodide.globals.get("env");
-  // Example: get greedy actions as JS array
-  const greedyActions = agent.get_greedy_actions().toJs();
-  console.log("Greedy actions (JS array):", greedyActions);
-  console.log(agent);
-  console.log(env);
+  const grid = env.grid.toJs();
+  console.log("Grid (JS array):", grid);
+
+  const container = document.getElementById('gridworld');
+  if (container) {
+    renderGridworld(grid, container);
+  }
   // Clean up if needed: agent.destroy();
-  console.log("Agent destroyed.");
 }
 
 main();
