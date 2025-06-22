@@ -1,19 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>RL Intro in Pyodide</title>
-</head>
-<body>
-  <h1>RL Intro in Pyodide</h1>
-  <div id="gridworld"></div>
-  <pre id="output">Loading...</pre>
+  <head>
+    <meta charset="UTF-8" />
+    <title>RL Intro in Pyodide</title>
+  </head>
+  <body>
+    <h1>RL Intro in Pyodide</h1>
 
-  <!-- <script type="module">
-    import './gridworld_view.js'; -->
-  </script>
-  <script type="module">
-    import './script.js';
-  </script>
-</body>
+    <div id="controls">
+      <button data-state="0">Empty</button>
+      <button data-state="1">Start</button>
+      <button data-state="2">Terminal</button>
+      <button data-state="3">Cliff</button>
+      <button data-state="4">Wall</button>
+    </div>
+    <div id="gridworld"></div>
+
+    <button id="save-btn">Save Grid</button>
+    <pre id="output">Loading...</pre>
+
+    <!-- <script type="module">
+    import './gridworld_view.js';
+  </script> -->
+    <script type="module">
+      import "./script.js";
+    </script>
+  </body>
 </html>

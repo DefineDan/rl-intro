@@ -1,9 +1,9 @@
-import { renderGridworld } from './gridworld_view.js';
+import { GridWorld } from "./gridworld.js";
 
 // Dynamically load Pyodide and use loadPyodide from the global scope
 async function loadPyodideScript() {
   if (!window.loadPyodide) {
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.src = "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js";
     script.type = "text/javascript";
     document.head.appendChild(script);
@@ -89,9 +89,19 @@ output = "\\n\\n".join(log)
   const grid = env.grid.toJs();
   console.log("Grid (JS array):", grid);
 
-  const container = document.getElementById('gridworld');
+  const container = document.getElementById("gridworld");
   if (container) {
-    renderGridworld(grid, container);
+    const gridWorld = new GridWorld(grid, container);
+    let position = env.get_position(env.state).toJs();
+    let agentPos = { row: position[0][0], col: position[1][0] };
+    console.log("Agent position:", agentPos);
+    gridWorld.render(agentPos);
+
+    document.querySelectorAll("[data-state]").forEach((button) => {
+      button.addEventListener("click", () => {
+        gridWorld.setSelectedState(parseInt(button.getAttribute("data-state")));
+      });
+    });
   }
   // Clean up if needed: agent.destroy();
 }
