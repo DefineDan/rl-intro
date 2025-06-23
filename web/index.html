@@ -3,27 +3,67 @@
   <head>
     <meta charset="UTF-8" />
     <title>RL Intro in Pyodide</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="script.js"></script>
+    <style>
+      .grid {
+        display: grid;
+        gap: 2px;
+      }
+      .cell {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 18px;
+        transition: box-shadow 0.2s;
+        cursor: pointer;
+      }
+      .cell:hover {
+        box-shadow: 0 0 8px #888;
+      }
+      .controls button {
+        margin: 5px;
+        padding: 8px 16px;
+      }
+      .controls button.active {
+        background-color: #4CAF50;
+        color: white;
+      }
+    </style>
   </head>
   <body>
     <h1>RL Intro in Pyodide</h1>
 
-    <div id="controls">
-      <button data-state="0">Empty</button>
-      <button data-state="1">Start</button>
-      <button data-state="2">Terminal</button>
-      <button data-state="3">Cliff</button>
-      <button data-state="4">Wall</button>
+    <div x-data="gridWorld()">
+      <div class="controls">
+        <template x-for="(label, state) in stateLabels" :key="state">
+          <button 
+            :class="{ active: selectedState === parseInt(state) }"
+            @click="selectedState = parseInt(state)"
+            x-text="label">
+          </button>
+        </template>
+      </div>
+
+      <div id="gridworld" class="grid"
+           :style="`grid-template-columns: repeat(${gridWidth}, 40px)`">
+        <template x-for="(row, i) in [...grid].reverse()" :key="i">
+          <template x-for="(cell, j) in row" :key="j">
+            <div 
+              class="cell"
+              :style="getCellStyle(cell)"
+              @click="updateCell(grid.length - 1 - i, j)"
+              x-html="getCellContent(grid.length - 1 - i, j)">
+            </div>
+          </template>
+        </template>
+      </div>
+
+      <button id="save-btn" @click="saveGrid">Confirm Grid</button>
+      <pre id="output">Loading...</pre>
     </div>
-    <div id="gridworld"></div>
-
-    <button id="save-btn">Save Grid</button>
-    <pre id="output">Loading...</pre>
-
-    <!-- <script type="module">
-    import './gridworld_view.js';
-  </script> -->
-    <script type="module">
-      import "./script.js";
-    </script>
   </body>
 </html>
