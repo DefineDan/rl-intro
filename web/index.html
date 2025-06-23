@@ -17,13 +17,6 @@
       <button :class="{ active: mode === GridMode.CONFIG }" @click="mode = GridMode.CONFIG">Grid Config</button>
       <button :class="{ active: mode === GridMode.VALUES }" @click="mode = GridMode.VALUES" :disabled="!agentValues">Agent Values</button>
     </div>
-    <div class="controls">
-      <template x-for="(label, state) in stateLabels" :key="state">
-        <button :class="{ active: selectedState === parseInt(state) }" @click="selectedState = parseInt(state)"
-          x-text="label">
-        </button>
-      </template>
-    </div>
 
     <div id="gridworld" class="grid" :style="`grid-template-columns: repeat(${gridWidth}, 40px)`">
       <template x-for="(row, i) in [...grid].reverse()" :key="i">
@@ -37,6 +30,15 @@
       </template>
     </div>
 
+    <template x-if="mode === GridMode.CONFIG">
+      <div class="controls">
+        <template x-for="(label, state) in stateLabels" :key="state">
+          <button :class="{ active: selectedState === parseInt(state) }" @click="selectedState = parseInt(state)"
+            x-text="label">
+          </button>
+        </template>
+      </div>
+    </template>
 
     <!-- Agent Configuration Form as a separate Alpine.js component -->
     <div class="agent-config" x-data="agentConfig()" x-init="window.agentConfigInstance = $data">
