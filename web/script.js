@@ -122,11 +122,14 @@ window.gridWorld = () => ({
       const pyGrid = pyodide.toPy(this.grid);
       pyodide.globals.set("pyGrid", pyGrid);
 
-      // Load and run the simulation code
+      // TODO: Execute once during startup only 
       const response = await fetch("/py/simulation.py");
       const code = await response.text();
       await pyodide.runPythonAsync(code); // Defines run_simulation
-      await pyodide.runPythonAsync("run_simulation(pyGrid)"); // Call with grid
+
+    
+      await pyodide.runPythonAsync("env = create_gridworld(pyGrid)");
+      await pyodide.runPythonAsync("run_simulation(env)"); // Call with grid
       
       // Get the results
       const result = pyodide.globals.get("output");
