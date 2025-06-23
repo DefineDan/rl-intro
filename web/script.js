@@ -1,5 +1,8 @@
+// Global Pyodide instance
+let pyodideInstance = null;
+
 // Dynamically load Pyodide and use loadPyodide from the global scope
-async function loadPyodideScript() {
+async function initializePyodide() {
   if (!window.loadPyodide) {
     const script = document.createElement("script");
     script.src = "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js";
@@ -9,7 +12,24 @@ async function loadPyodideScript() {
       script.onload = resolve;
     });
   }
-  return window.loadPyodide;
+
+  if (!pyodideInstance) {
+    const loadPyodide = window.loadPyodide;
+    console.log("Initializing Pyodide...");
+    pyodideInstance = await loadPyodide();
+    
+    // Install packages once
+    console.log("Installing packages...");
+    await pyodideInstance.loadPackage(["micropip"]);
+    await pyodideInstance.runPythonAsync(`
+      import micropip
+      await micropip.install("py/rl_intro-0.1.0-py3-none-any.whl")
+      import rl_intro
+    `);
+    console.log("Pyodide ready!");
+  }
+  
+  return pyodideInstance;
 }
 
 const StateKind = {
@@ -27,6 +47,21 @@ const stateStyles = {
   [StateKind.CLIFF]: { background: "#e53935", border: "#b71c1c" },
   [StateKind.WALL]: { background: "#757575", border: "#424242" },
 };
+
+// Initialize Pyodide when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+  const output = document.getElementById('output');
+  output.textContent = 'Initializing Python environment...';
+  
+  initializePyodide()
+    .then(() => {
+      output.textContent = 'Ready! Configure the grid and click Confirm Grid to start.';
+    })
+    .catch((error) => {
+      output.textContent = `Error initializing Python: ${error.message}`;
+      console.error(error);
+    });
+});
 
 // Define the Alpine component
 window.gridWorld = () => ({
@@ -77,18 +112,11 @@ window.gridWorld = () => ({
 
   async saveGrid() {
     const output = document.getElementById('output');
-    output.textContent = 'Saving grid...';
+    output.textContent = 'Running simulation...';
     
     try {
-      const loadPyodide = await loadPyodideScript();
-      const pyodide = await loadPyodide();
-      
-      // Install your rl_intro wheel
-      await pyodide.loadPackage(["micropip"]);
-      await pyodide.runPythonAsync(`
-        import micropip
-        await micropip.install("py/rl_intro-0.1.0-py3-none-any.whl")
-      `);
+      // Use the existing Pyodide instance
+      const pyodide = await initializePyodide();
 
       // Your Python script
       const code = `
