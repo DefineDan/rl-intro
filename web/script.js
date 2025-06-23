@@ -193,6 +193,26 @@ window.gridWorld = () => ({
       );
       await pyodide.runPythonAsync("experiment_log = run_simulation(env, agent)");
 
+      // TODO: move into python
+      console.log("Completed Experiment")
+      await pyodide.runPythonAsync("analysis = analyze_experiment(experiment_log, env.height, env.width)");
+      await pyodide.runPythonAsync("cumulative_reward_json = analysis.cumulative_reward.to_json(orient='split')");
+      const cumulativeRewardJson = pyodide.globals.get("cumulative_reward_json");
+      const cumulativeReward = JSON.parse(cumulativeRewardJson);
+      if (window.plotCumulativeReward) {
+        window.plotCumulativeReward(cumulativeReward, "reward-plot");
+      }
+      // --- End plot ---
+
+      // --- Plot episodic rewards using D3 ---
+      await pyodide.runPythonAsync("episodic_rewards_json = analysis.episodic_rewards.to_json(orient='split')");
+      const episodicRewardsJson = pyodide.globals.get("episodic_rewards_json");
+      const episodicRewards = JSON.parse(episodicRewardsJson);
+      if (window.plotEpisodicRewards) {
+        window.plotEpisodicRewards(episodicRewards, "episodic-reward-plot");
+      }
+      // --- End plot ---
+
       // Update agent position
       await pyodide.runPythonAsync("agent_pos = get_current_position(env)");
       this.agentPos = pyodide.globals.get("agent_pos").toJs();

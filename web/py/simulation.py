@@ -9,6 +9,7 @@ from rl_intro.utils.visualize import grid_str
 from rl_intro.environment.gridworld import StateKind
 from typing import List, Literal, Optional
 from enum import StrEnum
+from rl_intro.evaluation.analyze import analyze_experiment
 
 
 class AgentType(StrEnum):
