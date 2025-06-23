@@ -57,3 +57,26 @@
   font-size: 15px;
   background: #fff;
 }
+
+.mode-toggle button {
+  margin: 0;
+  padding: 8px 16px;
+  border: none;
+  background: #eee;
+  color: #333;
+  font-weight: bold;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.mode-toggle button.active {
+  background: #2196f3;
+  color: #fff;
+}
+
+.mode-toggle button:disabled {
+  background: #ccc;
+  color: #888;
+  cursor: not-allowed;
+}

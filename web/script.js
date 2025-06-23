@@ -20,6 +20,11 @@ const stateStyles = {
   [StateKind.WALL]: { background: "#757575", border: "#424242" },
 };
 
+const GridMode = {
+  CONFIG: 'config',
+  VALUES: 'values',
+};
+
 // Global Pyodide instance
 let pyodideInstance = null;
 
@@ -87,6 +92,7 @@ window.agentConfig = () => ({
 });
 
 window.gridWorld = () => ({
+  GridMode, // Make GridMode available to Alpine.js
   grid: [
     [1, 0, 0, 0, 0, 0, 0, 4, 0, 2],
     [0, 4, 3, 3, 3, 3, 0, 0, 0, 0],
@@ -96,6 +102,8 @@ window.gridWorld = () => ({
   selectedState: StateKind.EMPTY,
   agentPos: null,
   gridWidth: 10,
+  mode: GridMode.CONFIG,
+  agentValues: null,
   stateLabels: {
     [StateKind.EMPTY]: "Empty",
     [StateKind.START]: "Start",
@@ -104,17 +112,29 @@ window.gridWorld = () => ({
     [StateKind.WALL]: "Wall",
   },
 
-  getCellStyle(kind) {
-    const style = stateStyles[kind] || stateStyles[StateKind.EMPTY];
-    return {
-      background: style.background,
-      border: `2px solid ${style.border}`,
-    };
+  getCellStyle(kind, row, col) {
+    if (this.mode === GridMode.VALUES && this.agentValues) {
+      const idx = row * this.gridWidth + col;
+      const value = this.agentValues[idx];
+      const min = Math.min(...this.agentValues);
+      const max = Math.max(...this.agentValues);
+      const norm = (value - min) / (max - min || 1);
+      const color = d3.interpolateViridis(norm);
+      return {
+        background: color,
+        border: `2px solid ${color}`,
+        color: '#fff',
+      };
+    } else {
+      const style = stateStyles[kind] || stateStyles[StateKind.EMPTY];
+      return {
+        background: style.background,
+        border: `2px solid ${style.border}`,
+      };
+    }
   },
 
   getCellContent(row, col) {
-    const kind = this.grid[row][col];
-
     if (
       this.agentPos &&
       row === this.agentPos.row &&
@@ -122,7 +142,11 @@ window.gridWorld = () => ({
     ) {
       return "🤖";
     }
-
+    if (this.mode === GridMode.VALUES && this.agentValues) {
+      const idx = row * this.gridWidth + col;
+      return this.agentValues[idx].toFixed(1);
+    }
+    const kind = this.grid[row][col];
     switch (kind) {
       case StateKind.START:
         return "S";
@@ -138,6 +162,7 @@ window.gridWorld = () => ({
   },
 
   updateCell(row, col) {
+    if (this.mode !== GridMode.CONFIG) return;
     this.grid[row][col] = this.selectedState;
   },
 
@@ -174,12 +199,12 @@ window.gridWorld = () => ({
 
       await pyodide.runPythonAsync("final_values = agent.get_greedy_values()");
       const finalValues = pyodide.globals.get("final_values").toJs();
+      this.agentValues = finalValues;
       console.log("Final values:", finalValues);
 
       // put in output
       output.textContent = "Simulation completed!";
-      // Render value heatmap
-      renderValueHeatmap(finalValues, this.grid.length, this.grid[0].length);
+    
       
     } catch (error) {
       output.textContent = `Error: ${error.message}`;
@@ -187,36 +212,3 @@ window.gridWorld = () => ({
     }
   },
 });
-
-function renderValueHeatmap(flatValues, rows, cols) {
-  const matrix = [];
-  for (let i = 0; i < rows; i++) {
-    matrix.push(flatValues.slice(i * cols, (i + 1) * cols));
-  }
-  // Reverse for gridworld convention (bottom row last)
-  const plotMatrix = matrix.reverse();
-  
-  // Create text matrix with formatted values
-  const textMatrix = plotMatrix.map(row => 
-    row.map(val => val.toFixed(2))
-  );
-
-  Plotly.newPlot('value-heatmap', [{
-    z: plotMatrix,
-    type: 'heatmap',
-    colorscale: 'Viridis',
-    showscale: true,
-    hoverongaps: false,
-    text: textMatrix,
-    texttemplate: '%{text}',
-    textfont: {
-      size: 14,
-      color: 'white'
-    },
-    showlegend: false
-  }], {
-    margin: { t: 0, b: 0, l: 0, r: 0 },
-    xaxis: { showgrid: false, zeroline: false, showticklabels: false },
-    yaxis: { showgrid: false, zeroline: false, showticklabels: false },
-  });
-}
