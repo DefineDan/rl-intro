@@ -166,18 +166,57 @@ window.gridWorld = () => ({
       await pyodide.runPythonAsync(
         "agent = create_agent(pyAgentConfig, env.width * env.height, len(env.action_space))"
       );
-      await pyodide.runPythonAsync("run_simulation(env, agent)");
-
-      // Get the results
-      const result = pyodide.globals.get("output");
-      output.textContent = result;
+      await pyodide.runPythonAsync("experiment_log = run_simulation(env, agent)");
 
       // Update agent position
-      const agentPos = pyodide.globals.get("agent_pos").toJs();
-      this.agentPos = agentPos;
+      await pyodide.runPythonAsync("agent_pos = get_current_position(env)");
+      this.agentPos = pyodide.globals.get("agent_pos").toJs();
+
+      await pyodide.runPythonAsync("final_values = agent.get_greedy_values()");
+      const finalValues = pyodide.globals.get("final_values").toJs();
+      console.log("Final values:", finalValues);
+
+      // put in output
+      output.textContent = "Simulation completed!";
+      // Render value heatmap
+      renderValueHeatmap(finalValues, this.grid.length, this.grid[0].length);
+      
     } catch (error) {
       output.textContent = `Error: ${error.message}`;
       console.error(error);
     }
   },
 });
+
+function renderValueHeatmap(flatValues, rows, cols) {
+  const matrix = [];
+  for (let i = 0; i < rows; i++) {
+    matrix.push(flatValues.slice(i * cols, (i + 1) * cols));
+  }
+  // Reverse for gridworld convention (bottom row last)
+  const plotMatrix = matrix.reverse();
+  
+  // Create text matrix with formatted values
+  const textMatrix = plotMatrix.map(row => 
+    row.map(val => val.toFixed(2))
+  );
+
+  Plotly.newPlot('value-heatmap', [{
+    z: plotMatrix,
+    type: 'heatmap',
+    colorscale: 'Viridis',
+    showscale: true,
+    hoverongaps: false,
+    text: textMatrix,
+    texttemplate: '%{text}',
+    textfont: {
+      size: 14,
+      color: 'white'
+    },
+    showlegend: false
+  }], {
+    margin: { t: 0, b: 0, l: 0, r: 0 },
+    xaxis: { showgrid: false, zeroline: false, showticklabels: false },
+    yaxis: { showgrid: false, zeroline: false, showticklabels: false },
+  });
+}

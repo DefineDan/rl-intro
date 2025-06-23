@@ -77,22 +77,9 @@ def run_simulation(env: GridWorld, agent: Agent):
 
     experiment_config = ExperimentConfig(n_episodes=1000, max_steps=200)
     experiment = Experiment(agent, env, experiment_config)
+    return experiment.run()
 
-    log = []
 
-    log.append("Before training:")
-    log.append(env.to_str())
-    log.append(grid_str(agent.get_greedy_actions(), w, h))
-    log.append(grid_str(agent.get_greedy_values(), w, h))
-
-    experiment.run()
-
-    log.append("After training:")
-    log.append(env.to_str())
-    log.append(grid_str(agent.get_greedy_actions(), w, h))
-    log.append(grid_str(agent.get_greedy_values(), w, h))
-
-    global output, agent_pos
-    output = "\n\n".join(log)
+def get_current_position(env: GridWorld):
     position = env.get_position(env.state)
-    agent_pos = {"row": int(position[0]), "col": int(position[1])}
+    return {"row": int(position[0]), "col": int(position[1])}
