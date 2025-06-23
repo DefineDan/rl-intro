@@ -1,0 +1,30 @@
+.grid {
+  display: grid;
+  gap: 2px;
+}
+
+.cell {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  transition: box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.cell:hover {
+  box-shadow: 0 0 8px #888;
+}
+
+.controls button {
+  margin: 5px;
+  padding: 8px 16px;
+}
+
+.controls button.active {
+  background-color: #4CAF50;
+  color: white;
+} 
