@@ -1,11 +1,20 @@
-from rl_intro.agent.core import AgentConfig
+from rl_intro.agent.core import AgentConfig, Agent
 from rl_intro.agent.agent_expected_sarsa import AgentExpectedSarsa
+from rl_intro.agent.agent_q_learning import AgentQLearning
+from rl_intro.agent.agent_sarsa import AgentSarsa
 from rl_intro.environment.gridworld import GridWorld, GridWorldConfig
 from rl_intro.agent.policy import EpsilonGreedyPolicy, EpsilonGreedyConfig
 from rl_intro.simulation.experiment import Experiment, ExperimentConfig
 from rl_intro.utils.visualize import grid_str
 from rl_intro.environment.gridworld import StateKind
 from typing import List, Literal, Optional
+from enum import StrEnum
+
+
+class AgentType(StrEnum):
+    EXPECTED_SARSA = "expected_sarsa"
+    Q_LEARNING = "q_learning"
+    SARSA = "sarsa"
 
 
 def create_gridworld(grid: List[List], seed: Optional[int] = None) -> GridWorld:
@@ -41,19 +50,30 @@ def create_gridworld(grid: List[List], seed: Optional[int] = None) -> GridWorld:
     return GridWorld(env_config)
 
 
-def run_simulation(env: GridWorld):
-    w, h = env.config.width, env.config.height
-
+def create_agent(config: dict, n_states: int, n_actions: int) -> Agent:
+    policy = EpsilonGreedyPolicy(
+        EpsilonGreedyConfig(epsilon=config.get("epsilon", 0.1))
+    )
     agent_config = AgentConfig(
-        n_states=w * h,
-        n_actions=len(env.action_space),
+        n_states=n_states,
+        n_actions=n_actions,
+        learning_rate=config.get("learning_rate", 0.1),
+        discount=config.get("discount", 1.0),
         random_seed=42,
-        learning_rate=0.3,
-        discount=1.0,
     )
-    agent = AgentExpectedSarsa(
-        agent_config, EpsilonGreedyPolicy(EpsilonGreedyConfig(epsilon=0.1))
-    )
+    agent_type = AgentType(config.get("agent_type", "expected_sarsa"))
+    if agent_type == AgentType.EXPECTED_SARSA:
+        return AgentExpectedSarsa(agent_config, policy)
+    elif agent_type == AgentType.Q_LEARNING:
+        return AgentQLearning(agent_config, policy)
+    elif agent_type == AgentType.SARSA:
+        return AgentSarsa(agent_config, policy)
+    else:
+        raise ValueError(f"Invalid agent type: {agent_type}")
+
+
+def run_simulation(env: GridWorld, agent: Agent):
+    w, h = env.config.width, env.config.height
 
     experiment_config = ExperimentConfig(n_episodes=1000, max_steps=200)
     experiment = Experiment(agent, env, experiment_config)

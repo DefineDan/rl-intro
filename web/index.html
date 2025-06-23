@@ -1,42 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>RL Intro in Pyodide</title>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <script src="script.js"></script>
-    <link rel="stylesheet" href="styles.css">
-  </head>
-  <body>
-    <h1>RL Intro in Pyodide</h1>
 
-    <div x-data="gridWorld()">
-      <div class="controls">
-        <template x-for="(label, state) in stateLabels" :key="state">
-          <button 
-            :class="{ active: selectedState === parseInt(state) }"
-            @click="selectedState = parseInt(state)"
-            x-text="label">
-          </button>
-        </template>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <title>RL Intro in Pyodide</title>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="script.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
 
-      <div id="gridworld" class="grid"
-           :style="`grid-template-columns: repeat(${gridWidth}, 40px)`">
-        <template x-for="(row, i) in [...grid].reverse()" :key="i">
-          <template x-for="(cell, j) in row" :key="j">
-            <div 
-              class="cell"
-              :style="getCellStyle(cell)"
-              @click="updateCell(grid.length - 1 - i, j)"
-              x-html="getCellContent(grid.length - 1 - i, j)">
-            </div>
-          </template>
-        </template>
-      </div>
-
-      <button id="save-btn" @click="saveGrid">Confirm Grid</button>
-      <pre id="output">Loading...</pre>
+<body>
+  <h1>RL Intro in Pyodide</h1>
+  <div x-data="gridWorld()">
+    <div class="controls">
+      <template x-for="(label, state) in stateLabels" :key="state">
+        <button :class="{ active: selectedState === parseInt(state) }" @click="selectedState = parseInt(state)"
+          x-text="label">
+        </button>
+      </template>
     </div>
-  </body>
+
+    <div id="gridworld" class="grid" :style="`grid-template-columns: repeat(${gridWidth}, 40px)`">
+      <template x-for="(row, i) in [...grid].reverse()" :key="i">
+        <template x-for="(cell, j) in row" :key="j">
+          <div class="cell" :style="getCellStyle(cell)" @click="updateCell(grid.length - 1 - i, j)"
+            x-html="getCellContent(grid.length - 1 - i, j)">
+          </div>
+        </template>
+      </template>
+    </div>
+
+
+    <!-- Agent Configuration Form as a separate Alpine.js component -->
+    <div class="agent-config" x-data="agentConfig()" x-init="window.agentConfigInstance = $data">
+      <label>
+        Agent Type:
+        <select x-model="agentType">
+          <option :value="AgentType.EXPECTED_SARSA">Expected Sarsa</option>
+          <option :value="AgentType.Q_LEARNING">Q-Learning</option>
+          <option :value="AgentType.SARSA">Sarsa</option>
+        </select>
+      </label>
+      <label>
+        Learning Rate:
+        <input type="number" step="0.01" min="0" max="1" x-model.number="learningRate" />
+      </label>
+      <label>
+        Discount:
+        <input type="number" step="0.01" min="0" max="1" x-model.number="discount" />
+      </label>
+      <label>
+        Epsilon:
+        <input type="number" step="0.01" min="0" max="1" x-model.number="epsilon" />
+      </label>
+    </div>
+    <!-- End Agent Configuration Form -->
+
+    <button id="save-btn" @click="saveGrid">Run Simulation</button>
+
+
+    <pre id="output">Loading...</pre>
+  </div>
+</body>
+
 </html>
