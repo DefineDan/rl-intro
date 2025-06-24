@@ -14,7 +14,7 @@ class RandomPolicy(Policy):
     def select_action(
         self, agent: Agent, state: State, reward: Optional[Reward]
     ) -> Action:
-        return agent.random_generator.choice(agent.config.n_actions)
+        return Action(agent.random_generator.choice(agent.config.n_actions))
 
     def get_distribution(self, agent: Agent) -> np.ndarray:
         return np.full(
@@ -43,12 +43,12 @@ class EpsilonGreedyPolicy(Policy):
     ) -> Action:
         if agent.random_generator.random() < self.config.epsilon:
             # Explore: random action
-            return agent.random_generator.choice(agent.config.n_actions)
+            return Action(agent.random_generator.choice(agent.config.n_actions))
             # Exploit: best action from Q-table
         else:
             q_values = agent.q[state]
             action, value = fair_argmax(q_values, agent.random_generator)
-            return action
+            return Action(action)
 
     def get_distribution(self, agent: Agent) -> np.ndarray:
         n_states = agent.config.n_states

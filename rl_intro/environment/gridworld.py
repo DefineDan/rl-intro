@@ -118,7 +118,7 @@ class GridWorld:
 
     def _select_start_state(self) -> State:
         assert self.config.start_states, "No start states defined in the configuration."
-        return self.random_generator.choice(self.config.start_states)
+        return State(self.random_generator.choice(self.config.start_states))
 
     def reset(self) -> State:
         self.state = self._select_start_state()
