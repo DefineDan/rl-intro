@@ -80,3 +80,10 @@
   color: #888;
   cursor: not-allowed;
 }
+
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}

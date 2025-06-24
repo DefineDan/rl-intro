@@ -67,7 +67,19 @@
     </div>
     <!-- End Agent Configuration Form -->
 
-    <button id="save-btn" @click="saveGrid">Run Simulation</button>
+    <button @click="confirmGrid()">Confirm Grid</button>
+    <button @click="step()">Step</button>
+    <button @click="run()">Run</button>
+    <button @click="pause()">Pause</button>
+    <button @click="reset()">Reset</button>
+    <button @click="runFullAnalysis()">Run Full Analysis</button>
+
+    <div class="speed-control">
+      <label for="speed-slider">Speed</label>
+      <input id="speed-slider" type="range" min="10" max="500" step="10" x-model="stepDelay"
+        @input="if (isRunning) run()" />
+      <span x-text="stepDelay + ' ms'"></span>
+    </div>
 
     <div style="display: flex; flex-direction: row; gap: 24px; align-items: flex-start;">
       <div id="reward-plot"></div>

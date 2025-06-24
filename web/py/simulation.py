@@ -10,6 +10,7 @@ from rl_intro.environment.gridworld import StateKind
 from typing import List, Literal, Optional
 from enum import StrEnum
 from rl_intro.evaluation.analyze import analyze_experiment
+from dataclasses import asdict
 
 
 class AgentType(StrEnum):
@@ -73,9 +74,30 @@ def create_agent(config: dict, n_states: int, n_actions: int) -> Agent:
         raise ValueError(f"Invalid agent type: {agent_type}")
 
 
-def run_simulation(env: GridWorld, agent: Agent):
-    w, h = env.config.width, env.config.height
+GLOBAL_EXPERIMENT = None
 
+
+def init_simulation(env: GridWorld, agent: Agent):
+    global GLOBAL_EXPERIMENT
+    experiment_config = ExperimentConfig(n_episodes=1000, max_steps=200)
+    GLOBAL_EXPERIMENT = Experiment(agent, env, experiment_config)
+
+
+def step_simulation():
+    global GLOBAL_EXPERIMENT
+    if GLOBAL_EXPERIMENT is None:
+        raise ValueError("Simulation not initialized. Call init_simulation first.")
+
+    step_log = GLOBAL_EXPERIMENT.step()
+    position = GLOBAL_EXPERIMENT.env.get_position(GLOBAL_EXPERIMENT.env.state)
+
+    return {
+        "step_log": asdict(step_log),
+        "position": {"row": int(position[0]), "col": int(position[1])},
+    }
+
+
+def run_full_experiment(env: GridWorld, agent: Agent):
     experiment_config = ExperimentConfig(n_episodes=1000, max_steps=200)
     experiment = Experiment(agent, env, experiment_config)
     return experiment.run()

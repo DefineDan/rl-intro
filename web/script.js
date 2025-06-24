@@ -21,8 +21,8 @@ const stateStyles = {
 };
 
 const GridMode = {
-  CONFIG: 'config',
-  VALUES: 'values',
+  CONFIG: "config",
+  VALUES: "values",
 };
 
 // Global Pyodide instance
@@ -50,7 +50,7 @@ async function initializePyodide() {
     await pyodideInstance.loadPackage(["micropip"]);
     await pyodideInstance.runPythonAsync(`
       import micropip
-      await micropip.install("py/rl_intro-0.1.0-py3-none-any.whl")
+      await micropip.install("py/rl_intro-0.1.1-py3-none-any.whl")
       import rl_intro
     `);
     console.log("Pyodide ready!");
@@ -104,6 +104,9 @@ window.gridWorld = () => ({
   gridWidth: 10,
   mode: GridMode.CONFIG,
   agentValues: null,
+  isRunning: false,
+  stepInterval: null,
+  stepDelay: 200, // Default delay in ms
   stateLabels: {
     [StateKind.EMPTY]: "Empty",
     [StateKind.START]: "Start",
@@ -123,7 +126,7 @@ window.gridWorld = () => ({
       return {
         background: color,
         border: `2px solid ${color}`,
-        color: '#fff',
+        color: "#fff",
       };
     } else {
       const style = stateStyles[kind] || stateStyles[StateKind.EMPTY];
@@ -166,15 +169,13 @@ window.gridWorld = () => ({
     this.grid[row][col] = this.selectedState;
   },
 
-  async saveGrid() {
+  async confirmGrid() {
     const output = document.getElementById("output");
-    output.textContent = "Running simulation...";
+    output.textContent = "Initializing simulation...";
 
     try {
-      // Use the existing Pyodide instance
       const pyodide = await initializePyodide();
 
-      // Set the grid variable in Python
       const pyGrid = pyodide.toPy(this.grid);
       pyodide.globals.set("pyGrid", pyGrid);
 
@@ -185,19 +186,105 @@ window.gridWorld = () => ({
       // TODO: Execute once during startup only
       const response = await fetch("/py/simulation.py");
       const code = await response.text();
-      await pyodide.runPythonAsync(code); // Defines run_simulation
+      await pyodide.runPythonAsync(code);
 
       await pyodide.runPythonAsync("env = create_gridworld(pyGrid)");
       await pyodide.runPythonAsync(
         "agent = create_agent(pyAgentConfig, env.width * env.height, len(env.action_space))"
       );
-      await pyodide.runPythonAsync("experiment_log = run_simulation(env, agent)");
+      await pyodide.runPythonAsync("init_simulation(env, agent)");
+
+      await pyodide.runPythonAsync("agent_pos = get_current_position(env)");
+      this.agentPos = pyodide.globals.get("agent_pos").toJs();
+
+      output.textContent = "Simulation initialized. Ready to step or run.";
+    } catch (error) {
+      output.textContent = `Error: ${error.message}`;
+      console.error(error);
+    }
+  },
+
+  async step() {
+    const output = document.getElementById("output");
+    try {
+      const pyodide = await initializePyodide();
+      await pyodide.runPythonAsync("result = step_simulation()");
+      const result = pyodide.globals
+        .get("result")
+        .toJs({ dict_converter: Object.fromEntries });
+
+      this.agentPos = result.position;
+      const stepLog = result.step_log;
+      output.textContent = `Episode: ${stepLog.episode}, Step: ${
+        stepLog.step
+      }, Reward: ${stepLog.reward.toFixed(2)}`;
+
+      if (stepLog.terminal) {
+        output.textContent += " (Episode finished)";
+      }
+    } catch (error) {
+      output.textContent = `Error: ${error.message}`;
+      console.error(error);
+      this.pause();
+    }
+  },
+
+  run() {
+    this.pause();
+    this.isRunning = true;
+    this.stepInterval = setInterval(() => {
+      this.step();
+    }, this.stepDelay);
+  },
+
+  pause() {
+    this.isRunning = false;
+    if (this.stepInterval) {
+      clearInterval(this.stepInterval);
+      this.stepInterval = null;
+    }
+  },
+
+  reset() {
+    this.pause();
+    this.mode = GridMode.CONFIG;
+    this.agentPos = null;
+    this.agentValues = null;
+    const output = document.getElementById("output");
+    output.textContent =
+      "Ready! Configure the grid and click Confirm Grid to start.";
+  },
+
+  async runFullAnalysis() {
+    const output = document.getElementById("output");
+    output.textContent = "Running full analysis...";
+
+    try {
+      const pyodide = await initializePyodide();
+      pyodide.globals.set("pyGrid", pyodide.toPy(this.grid));
+      let agentConfig = window.agentConfigInstance.getConfig();
+      pyodide.globals.set("pyAgentConfig", pyodide.toPy(agentConfig));
+
+      await pyodide.runPythonAsync("env = create_gridworld(pyGrid)");
+      await pyodide.runPythonAsync(
+        "agent = create_agent(pyAgentConfig, env.width * env.height, len(env.action_space))"
+      );
+
+      await pyodide.runPythonAsync(
+        "experiment_log = run_full_experiment(env, agent)"
+      );
 
       // TODO: move into python
-      console.log("Completed Experiment")
-      await pyodide.runPythonAsync("analysis = analyze_experiment(experiment_log, env.height, env.width)");
-      await pyodide.runPythonAsync("cumulative_reward_json = analysis.cumulative_reward.to_json(orient='split')");
-      const cumulativeRewardJson = pyodide.globals.get("cumulative_reward_json");
+      console.log("Completed Experiment");
+      await pyodide.runPythonAsync(
+        "analysis = analyze_experiment(experiment_log, env.height, env.width)"
+      );
+      await pyodide.runPythonAsync(
+        "cumulative_reward_json = analysis.cumulative_reward.to_json(orient='split')"
+      );
+      const cumulativeRewardJson = pyodide.globals.get(
+        "cumulative_reward_json"
+      );
       const cumulativeReward = JSON.parse(cumulativeRewardJson);
       if (window.plotCumulativeReward) {
         window.plotCumulativeReward(cumulativeReward, "reward-plot");
@@ -205,7 +292,9 @@ window.gridWorld = () => ({
       // --- End plot ---
 
       // --- Plot episodic rewards using D3 ---
-      await pyodide.runPythonAsync("episodic_rewards_json = analysis.episodic_rewards.to_json(orient='split')");
+      await pyodide.runPythonAsync(
+        "episodic_rewards_json = analysis.episodic_rewards.to_json(orient='split')"
+      );
       const episodicRewardsJson = pyodide.globals.get("episodic_rewards_json");
       const episodicRewards = JSON.parse(episodicRewardsJson);
       if (window.plotEpisodicRewards) {
@@ -223,9 +312,7 @@ window.gridWorld = () => ({
       console.log("Final values:", finalValues);
 
       // put in output
-      output.textContent = "Simulation completed!";
-    
-      
+      output.textContent = "Analysis complete!";
     } catch (error) {
       output.textContent = `Error: ${error.message}`;
       console.error(error);
