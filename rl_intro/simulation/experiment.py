@@ -62,7 +62,7 @@ class Experiment:
     def run_episodes(self, n_episodes: int, max_steps: int) -> ExperimentLog:
         for episode in trange(n_episodes, desc="Episodes"):
             self.env.reset()
-            action = self.agent.start(self.env.state)
+            action = self.agent.step(self.env.state, 0, False)
             for step in range(1, max_steps + 1):
                 state, reward, terminal = self.env.step(action)
                 self.log.steps.append(
