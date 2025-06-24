@@ -69,7 +69,7 @@ class Experiment:
         state = self.env.reset()
         self.last_action = self.agent.step(state, None, False)
         self.episode_start = False
-        return state, 0.0, False  # track start step reward as 0.0
+        return state, Reward(0.0), Terminal(False)  # track start step reward as 0.0
 
     def step(self) -> StepLog:
         if self.episode_start or self.last_action is None:
