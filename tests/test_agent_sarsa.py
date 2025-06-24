@@ -62,7 +62,7 @@ def test_step_updates_q():
     state1 = 1
     reward = 1.0
     terminal = False
-    agent.start(state0)
+    agent.step(state0, None, False)
     agent.q[state0, 0] = 0.0
     agent.q[state1, 0] = 2.0
     action = agent.step(state1, reward, terminal)

@@ -45,4 +45,4 @@ if __name__ == "__main__":
     )
     agent = AgentFactory.create_agent(recipe)
     logger.debug(agent)
-    logger.debug(f"Initial action: {agent.start(0)}")
+    logger.debug(f"Initial action: {agent.step(0, None, False)}")

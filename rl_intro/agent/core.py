@@ -35,11 +35,9 @@ class Agent(ABC):
         self.policy = policy
 
     @abstractmethod
-    def start(self, state: State) -> Action:
-        pass
-
-    @abstractmethod
-    def step(self, state: State, reward: Reward, terminal: Terminal) -> Action:
+    def step(
+        self, state: State, reward: Optional[Reward], terminal: Terminal
+    ) -> Action:
         pass
 
     def get_greedy_actions(self) -> np.ndarray:

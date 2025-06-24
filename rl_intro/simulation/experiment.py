@@ -58,37 +58,54 @@ class Experiment:
             steps=[],
             seed=agent.config.random_seed,
         )
+        self.last_action: Optional[Action] = None
+        self.episode_start: Terminal = True
+        self.step_count: int = 0
+        self.episode_count: int = 0
 
-    def run_episodes(self, n_episodes: int, max_steps: int) -> ExperimentLog:
-        for episode in trange(n_episodes, desc="Episodes"):
-            self.env.reset()
-            action = self.agent.start(self.env.state)
-            for step in range(1, max_steps + 1):
-                state, reward, terminal = self.env.step(action)
-                self.log.steps.append(
-                    StepLog(
-                        episode=episode,
-                        step=step,
-                        action=Action(action),
-                        state=State(state),
-                        reward=Reward(reward),
-                        terminal=Terminal(terminal),
-                    )
-                )
-                action = self.agent.step(state, reward, terminal)
-                if terminal:
-                    break
-            else:
-                # logger.warning(
-                #     f"Agent took too many steps ({self.config.max_steps}) in episode {episode}, resetting."
-                # )
-                pass
+    def start_step(self) -> tuple[State, Reward, Terminal]:
+        self.step_count = 0
+        self.episode_count += 1
+        state = self.env.reset()
+        self.last_action = self.agent.step(state, None, False)
+        self.episode_start = False
+        return state, Reward(0.0), Terminal(False)  # track start step reward as 0.0
+
+    def step(self) -> StepLog:
+        if self.episode_start or self.last_action is None:
+            state, reward, terminal = self.start_step()
+        else:
+            state, reward, terminal = self.env.step(self.last_action)
+            self.last_action = self.agent.step(state, reward, terminal)
+            self.step_count += 1
+            self.episode_start = terminal or self.step_count >= self.config.max_steps
+        assert self.last_action is not None, "Agent did not return an action."
+        step_log = StepLog(
+            episode=self.episode_count,
+            step=self.step_count,
+            action=self.last_action,
+            state=state,
+            reward=reward,
+            terminal=terminal,
+        )
+        self.log.steps.append(step_log)
+        return step_log
+
+    def run_episode(self) -> None:
+        while True:
+            self.step()
+            if self.episode_start:
+                break
+
+    def run_episodes(self, n_episodes: int) -> ExperimentLog:
+        for _ in trange(n_episodes, desc="Episodes"):
+            self.run_episode()
         self.log.final_values = self.agent.get_greedy_values().tolist()
         return self.log
 
     def run(self) -> ExperimentLog:
         assert len(self.log.steps) == 0, "Experiment log is not empty."
-        return self.run_episodes(self.config.n_episodes, self.config.max_steps)
+        return self.run_episodes(self.config.n_episodes)
 
 
 class ExperimentBatch:

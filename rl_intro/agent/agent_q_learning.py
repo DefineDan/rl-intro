@@ -21,17 +21,14 @@ class AgentQLearning(Agent):
     def __str__(self):
         return f"AgentQLearning(learning_rate={self.config.learning_rate},discount={self.config.discount},policy={self.policy})"
 
-    def start(self, state: State) -> Action:
-        action = self.policy.select_action(self, state, None)
-        self.last_state = state
-        self.last_action = action
-        return action
-
-    def step(self, state: State, reward: Reward, terminal: Terminal) -> Action:
+    def step(
+        self, state: State, reward: Optional[Reward], terminal: Terminal
+    ) -> Action:
         action = self.policy.select_action(self, state, reward)
-        self.learn(state, reward, terminal, action)
-        self.last_state = state
-        self.last_action = action
+        if reward is not None:
+            self.learn(state, reward, terminal, action)
+        self.last_state = state if not terminal else None
+        self.last_action = action if not terminal else None
         return action
 
     def learn(
