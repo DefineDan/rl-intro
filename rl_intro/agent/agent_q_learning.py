@@ -21,11 +21,11 @@ class AgentQLearning(Agent):
     def __str__(self):
         return f"AgentQLearning(learning_rate={self.config.learning_rate},discount={self.config.discount},policy={self.policy})"
 
-    def step(self, state: State, reward: Reward, terminal: Terminal) -> Action:
-        if self.last_state is None or self.last_action is None:
-            action = self.policy.select_action(self, state, None)
-        else:
-            action = self.policy.select_action(self, state, reward)
+    def step(
+        self, state: State, reward: Optional[Reward], terminal: Terminal
+    ) -> Action:
+        action = self.policy.select_action(self, state, reward)
+        if reward is not None:
             self.learn(state, reward, terminal, action)
         self.last_state = state if not terminal else None
         self.last_action = action if not terminal else None
