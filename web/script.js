@@ -172,28 +172,25 @@ window.gridWorld = () => ({
     this.grid[row][col] = this.selectedState;
   },
 
+  async initializeSimulation(pyodide, grid, agentConfig) {
+    await pyodide.runPythonAsync("reset_globals()");
+    const pyGrid = pyodide.toPy(grid);
+    pyodide.globals.set("pyGrid", pyGrid);
+    await pyodide.runPythonAsync(`create_gridworld(pyGrid)`);
+    const pyAgentConfig = pyodide.toPy(agentConfig);
+    pyodide.globals.set("pyAgentConfig", pyAgentConfig);
+    await pyodide.runPythonAsync(`create_agent(pyAgentConfig)`);
+    await pyodide.runPythonAsync(`create_experiment()`);
+  },
+
   async confirmGrid() {
     const output = document.getElementById("output");
     output.textContent = "Initializing simulation...";
 
     try {
       const pyodide = await initializePyodide();
-      await pyodide.runPythonAsync("reset_globals()");
-      // Create environment with grid config
-      pyodide.globals.set("pyGrid", pyodide.toPy(this.grid));
-      await pyodide.runPythonAsync(`
-        create_gridworld(pyGrid)
-      `);
-      // Create agent with config
       let agentConfig = window.agentConfigInstance.getConfig();
-      pyodide.globals.set("pyAgentConfig", pyodide.toPy(agentConfig));
-      await pyodide.runPythonAsync(`
-        create_agent(pyAgentConfig)
-      `);
-      // Create experiment
-      await pyodide.runPythonAsync(`
-        create_experiment()
-      `);
+      await this.initializeSimulation(pyodide, this.grid, agentConfig);
       // Get initial position
       const position = await pyodide.runPythonAsync("get_current_position()");
       this.agentPos = position.toJs();
@@ -260,23 +257,8 @@ window.gridWorld = () => ({
 
     try {
       const pyodide = await initializePyodide();
-
-      // Reset any existing state
-      await pyodide.runPythonAsync("reset_globals()");
-
-      // Create environment
-      const pyGrid = pyodide.toPy(this.grid);
-      await pyodide.runPythonAsync(`
-        create_gridworld(pyGrid)
-      `);
-
-      // Create agent with config
       let agentConfig = window.agentConfigInstance.getConfig();
-      const pyAgentConfig = pyodide.toPy(agentConfig);
-      await pyodide.runPythonAsync(`
-        create_agent(pyAgentConfig)
-      `);
-
+      await this.initializeSimulation(pyodide, this.grid, agentConfig);
       // Run full experiment and analyze
       await pyodide.runPythonAsync("run_full_experiment()");
       const analysis = await pyodide.runPythonAsync(

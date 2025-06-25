@@ -115,7 +115,6 @@ def step_experiment():
 
 
 def run_full_experiment():
-    create_experiment()
     if global_experiment is None:
         raise ValueError("Experiment not initialized")
     return global_experiment.run()
