@@ -1,6 +1,7 @@
 import { GridMode, StateKind, stateStyles, initialGrid, stateLabels } from './constants.js';
 import { getPyodide } from './pyodide.js';
 import { plotCumulativeReward, plotEpisodicRewards } from './plot.js';
+import * as pyInterface from './py-interface.js';
 
 export function gridWorld() {
   return {
@@ -70,28 +71,15 @@ export function gridWorld() {
       this.grid[row][col] = this.selectedState;
     },
 
-    async initializeSimulation(pyodide, grid, agentConfig) {
-      await pyodide.runPythonAsync("reset_globals()");
-      const pyGrid = pyodide.toPy(grid);
-      pyodide.globals.set("pyGrid", pyGrid);
-      await pyodide.runPythonAsync(`create_gridworld(pyGrid)`);
-      const pyAgentConfig = pyodide.toPy(agentConfig);
-      pyodide.globals.set("pyAgentConfig", pyAgentConfig);
-      await pyodide.runPythonAsync(`create_agent(pyAgentConfig)`);
-      await pyodide.runPythonAsync(`create_experiment()`);
-    },
 
     async confirmGrid() {
       const output = document.getElementById("output");
       output.textContent = "Initializing simulation...";
 
       try {
-        const pyodide = await getPyodide();
         let agentConfig = window.agentConfigInstance.getConfig();
-        await this.initializeSimulation(pyodide, this.grid, agentConfig);
-        // Get initial position
-        const position = await pyodide.runPythonAsync("get_current_position()");
-        this.agentPos = position.toJs();
+        await pyInterface.initializeSimulation(this.grid, agentConfig);
+        this.agentPos = await pyInterface.getCurrentPosition();
 
         output.textContent = "Simulation initialized. Ready to step or run.";
       } catch (error) {
@@ -103,9 +91,7 @@ export function gridWorld() {
     async step() {
       const output = document.getElementById("output");
       try {
-        const pyodide = await getPyodide();
-        const step_result = await pyodide.runPythonAsync("step_experiment()");
-        const stepResult = step_result.toJs({dict_converter: Object.fromEntries});
+        const stepResult = await pyInterface.stepExperiment();
 
         this.agentPos = stepResult.position;
         this.agentValues = stepResult.values;
@@ -154,16 +140,11 @@ export function gridWorld() {
       output.textContent = "Running full analysis...";
 
       try {
-        this.pause()
-        const pyodide = await getPyodide();
+        this.pause();
         let agentConfig = window.agentConfigInstance.getConfig();
-        await this.initializeSimulation(pyodide, this.grid, agentConfig);
-        // Run full experiment and analyze
-        await pyodide.runPythonAsync("run_full_experiment()");
-        const analysis = await pyodide.runPythonAsync(
-          "analyze_experiment_logs()"
-        );
-        const results = analysis.toJs({dict_converter: Object.fromEntries});
+        await pyInterface.initializeSimulation(this.grid, agentConfig);
+        await pyInterface.runFullExperiment();
+        const results = await pyInterface.analyzeExperimentLogs();
 
         const cumulativeReward = JSON.parse(results.cumulative_reward);
         const episodicRewards = JSON.parse(results.episodic_rewards);
@@ -171,8 +152,7 @@ export function gridWorld() {
         plotCumulativeReward(cumulativeReward, "reward-plot");
         plotEpisodicRewards(episodicRewards, "episodic-reward-plot");
 
-        const position = await pyodide.runPythonAsync("get_current_position()");
-        this.agentPos = position.toJs();
+        this.agentPos = await pyInterface.getCurrentPosition();
         this.agentValues = results.values;
 
         output.textContent = "Analysis complete!";
