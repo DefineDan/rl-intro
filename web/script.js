@@ -53,7 +53,10 @@ async function initializePyodide() {
       await micropip.install("py/rl_intro-0.1.1-py3-none-any.whl")
       import rl_intro
     `);
-    console.log("Pyodide ready!");
+    const response = await fetch("/py/simulation.py");
+    const code = await response.text();
+    await pyodideInstance.runPythonAsync(code);
+    console.log("Pyodide ready to go!");
   }
 
   return pyodideInstance;
@@ -175,27 +178,25 @@ window.gridWorld = () => ({
 
     try {
       const pyodide = await initializePyodide();
-
-      const pyGrid = pyodide.toPy(this.grid);
-      pyodide.globals.set("pyGrid", pyGrid);
-
+      await pyodide.runPythonAsync("reset_globals()");
+      // Create environment with grid config
+      pyodide.globals.set("pyGrid", pyodide.toPy(this.grid));
+      await pyodide.runPythonAsync(`
+        create_gridworld(pyGrid)
+      `);
+      // Create agent with config
       let agentConfig = window.agentConfigInstance.getConfig();
-      const pyAgentConfig = pyodide.toPy(agentConfig);
-      pyodide.globals.set("pyAgentConfig", pyAgentConfig);
-
-      // TODO: Execute once during startup only
-      const response = await fetch("/py/simulation.py");
-      const code = await response.text();
-      await pyodide.runPythonAsync(code);
-
-      await pyodide.runPythonAsync("env = create_gridworld(pyGrid)");
-      await pyodide.runPythonAsync(
-        "agent = create_agent(pyAgentConfig, env.width * env.height, len(env.action_space))"
-      );
-      await pyodide.runPythonAsync("init_simulation(env, agent)");
-
-      await pyodide.runPythonAsync("agent_pos = get_current_position(env)");
-      this.agentPos = pyodide.globals.get("agent_pos").toJs();
+      pyodide.globals.set("pyAgentConfig", pyodide.toPy(agentConfig));
+      await pyodide.runPythonAsync(`
+        create_agent(pyAgentConfig)
+      `);
+      // Create experiment
+      await pyodide.runPythonAsync(`
+        create_experiment()
+      `);
+      // Get initial position
+      const position = await pyodide.runPythonAsync("get_current_position()");
+      this.agentPos = position.toJs();
 
       output.textContent = "Simulation initialized. Ready to step or run.";
     } catch (error) {
@@ -208,18 +209,16 @@ window.gridWorld = () => ({
     const output = document.getElementById("output");
     try {
       const pyodide = await initializePyodide();
-      await pyodide.runPythonAsync("result = step_simulation()");
-      const result = pyodide.globals
-        .get("result")
-        .toJs({ dict_converter: Object.fromEntries });
+      const step_result = await pyodide.runPythonAsync("step_experiment()");
+      const stepResult = step_result.toJs({dict_converter: Object.fromEntries});
 
-      this.agentPos = result.position;
-      const stepLog = result.step_log;
-      output.textContent = `Episode: ${stepLog.episode}, Step: ${
-        stepLog.step
-      }, Reward: ${stepLog.reward.toFixed(2)}`;
+      this.agentPos = stepResult.position;
+      this.agentValues = stepResult.values;
+      output.textContent = `Episode: ${stepResult.step_log.episode}, Step: ${
+        stepResult.step_log.step
+      }, Reward: ${stepResult.step_log.reward.toFixed(2)}`;
 
-      if (stepLog.terminal) {
+      if (stepResult.step_log.terminal) {
         output.textContent += " (Episode finished)";
       }
     } catch (error) {
@@ -261,57 +260,42 @@ window.gridWorld = () => ({
 
     try {
       const pyodide = await initializePyodide();
-      pyodide.globals.set("pyGrid", pyodide.toPy(this.grid));
+
+      // Reset any existing state
+      await pyodide.runPythonAsync("reset_globals()");
+
+      // Create environment
+      const pyGrid = pyodide.toPy(this.grid);
+      await pyodide.runPythonAsync(`
+        create_gridworld(pyGrid)
+      `);
+
+      // Create agent with config
       let agentConfig = window.agentConfigInstance.getConfig();
-      pyodide.globals.set("pyAgentConfig", pyodide.toPy(agentConfig));
+      const pyAgentConfig = pyodide.toPy(agentConfig);
+      await pyodide.runPythonAsync(`
+        create_agent(pyAgentConfig)
+      `);
 
-      await pyodide.runPythonAsync("env = create_gridworld(pyGrid)");
-      await pyodide.runPythonAsync(
-        "agent = create_agent(pyAgentConfig, env.width * env.height, len(env.action_space))"
+      // Run full experiment and analyze
+      await pyodide.runPythonAsync("run_full_experiment()");
+      const analysis = await pyodide.runPythonAsync(
+        "analyze_experiment_logs()"
       );
+      const results = analysis.toJs({dict_converter: Object.fromEntries});
 
-      await pyodide.runPythonAsync(
-        "experiment_log = run_full_experiment(env, agent)"
-      );
-
-      // TODO: move into python
-      console.log("Completed Experiment");
-      await pyodide.runPythonAsync(
-        "analysis = analyze_experiment(experiment_log, env.height, env.width)"
-      );
-      await pyodide.runPythonAsync(
-        "cumulative_reward_json = analysis.cumulative_reward.to_json(orient='split')"
-      );
-      const cumulativeRewardJson = pyodide.globals.get(
-        "cumulative_reward_json"
-      );
-      const cumulativeReward = JSON.parse(cumulativeRewardJson);
+      const cumulativeReward = JSON.parse(results.cumulative_reward);
       if (window.plotCumulativeReward) {
         window.plotCumulativeReward(cumulativeReward, "reward-plot");
       }
-      // --- End plot ---
-
-      // --- Plot episodic rewards using D3 ---
-      await pyodide.runPythonAsync(
-        "episodic_rewards_json = analysis.episodic_rewards.to_json(orient='split')"
-      );
-      const episodicRewardsJson = pyodide.globals.get("episodic_rewards_json");
-      const episodicRewards = JSON.parse(episodicRewardsJson);
+      const episodicRewards = JSON.parse(results.episodic_rewards);
       if (window.plotEpisodicRewards) {
         window.plotEpisodicRewards(episodicRewards, "episodic-reward-plot");
       }
-      // --- End plot ---
+      this.agentValues = results.values;
+      const position = await pyodide.runPythonAsync("get_current_position()");
+      this.agentPos = position.toJs();
 
-      // Update agent position
-      await pyodide.runPythonAsync("agent_pos = get_current_position(env)");
-      this.agentPos = pyodide.globals.get("agent_pos").toJs();
-
-      await pyodide.runPythonAsync("final_values = agent.get_greedy_values()");
-      const finalValues = pyodide.globals.get("final_values").toJs();
-      this.agentValues = finalValues;
-      console.log("Final values:", finalValues);
-
-      // put in output
       output.textContent = "Analysis complete!";
     } catch (error) {
       output.textContent = `Error: ${error.message}`;

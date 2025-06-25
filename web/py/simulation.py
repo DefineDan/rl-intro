@@ -13,6 +13,13 @@ from rl_intro.evaluation.analyze import analyze_experiment
 from dataclasses import asdict
 
 
+########### ! GLOBAL VARIABLES FOR INTERFACING WITH PYODIDE
+global_environment: Optional[GridWorld] = None
+global_agent: Optional[Agent] = None
+global_experiment: Optional[Experiment] = None
+########### ! GLOBAL VARIABLES FOR INTERFACING WITH PYODIDE
+
+
 class AgentType(StrEnum):
     EXPECTED_SARSA = "expected_sarsa"
     Q_LEARNING = "q_learning"
@@ -49,60 +56,107 @@ def create_gridworld(grid: List[List], seed: Optional[int] = None) -> GridWorld:
             else:
                 raise ValueError(f"Invalid cell value {cell} at ({i}, {j})")
 
-    return GridWorld(env_config)
+    global global_environment
+    global_environment = GridWorld(env_config)
+
+    return global_environment
 
 
-def create_agent(config: dict, n_states: int, n_actions: int) -> Agent:
+def create_agent(config: dict) -> Agent:
+    if global_environment is None:
+        raise ValueError("Environment not initialized. Cannot create agent")
     policy = EpsilonGreedyPolicy(
         EpsilonGreedyConfig(epsilon=config.get("epsilon", 0.1))
     )
     agent_config = AgentConfig(
-        n_states=n_states,
-        n_actions=n_actions,
+        n_states=len(global_environment.state_space),
+        n_actions=len(global_environment.action_space),
         learning_rate=config.get("learning_rate", 0.1),
         discount=config.get("discount", 1.0),
         random_seed=42,
     )
     agent_type = AgentType(config.get("agent_type", "expected_sarsa"))
+
+    global global_agent
     if agent_type == AgentType.EXPECTED_SARSA:
-        return AgentExpectedSarsa(agent_config, policy)
+        global_agent = AgentExpectedSarsa(agent_config, policy)
     elif agent_type == AgentType.Q_LEARNING:
-        return AgentQLearning(agent_config, policy)
+        global_agent = AgentQLearning(agent_config, policy)
     elif agent_type == AgentType.SARSA:
-        return AgentSarsa(agent_config, policy)
+        global_agent = AgentSarsa(agent_config, policy)
     else:
         raise ValueError(f"Invalid agent type: {agent_type}")
+    return global_agent
 
 
-GLOBAL_EXPERIMENT = None
+def create_experiment(
+    # TODO: pass in config
+    experiment_config=ExperimentConfig(n_episodes=1000, max_steps=200)
+):
+    if global_agent is None or global_environment is None:
+        raise ValueError("Agent or environment not initialized")
+    global global_experiment
+    global_experiment = Experiment(global_agent, global_environment, experiment_config)
+    return global_experiment
 
 
-def init_simulation(env: GridWorld, agent: Agent):
-    global GLOBAL_EXPERIMENT
-    experiment_config = ExperimentConfig(n_episodes=1000, max_steps=200)
-    GLOBAL_EXPERIMENT = Experiment(agent, env, experiment_config)
+def step_experiment():
+    global global_experiment
+    if global_experiment is None:
+        raise ValueError("Experiment not initialized.")
 
-
-def step_simulation():
-    global GLOBAL_EXPERIMENT
-    if GLOBAL_EXPERIMENT is None:
-        raise ValueError("Simulation not initialized. Call init_simulation first.")
-
-    step_log = GLOBAL_EXPERIMENT.step()
-    position = GLOBAL_EXPERIMENT.env.get_position(GLOBAL_EXPERIMENT.env.state)
-
-    return {
+    step_log = global_experiment.step()
+    result = {
         "step_log": asdict(step_log),
-        "position": {"row": int(position[0]), "col": int(position[1])},
+        "position": get_current_position(),
+        "values": get_current_values(),
+    }
+    return result
+
+
+def run_full_experiment():
+    create_experiment()
+    if global_experiment is None:
+        raise ValueError("Experiment not initialized")
+    return global_experiment.run()
+
+
+def analyze_experiment_logs():
+    if global_experiment is None or global_environment is None:
+        raise ValueError("Experiment not initialized")
+    h, w = get_grid_shape()
+    analysis = analyze_experiment(global_experiment.log, h, w)
+    return {
+        "cumulative_reward": analysis.cumulative_reward.to_json(orient="split"),
+        "episodic_rewards": analysis.episodic_rewards.to_json(orient="split"),
+        "values": analysis.final_values.flatten(),
+        "visits": analysis.visit_matrix.flatten(),
     }
 
 
-def run_full_experiment(env: GridWorld, agent: Agent):
-    experiment_config = ExperimentConfig(n_episodes=1000, max_steps=200)
-    experiment = Experiment(agent, env, experiment_config)
-    return experiment.run()
+def get_current_values():
+    if global_agent is None:
+        raise ValueError("Cannot get values of None agent")
+    return global_agent.get_greedy_values()
 
 
-def get_current_position(env: GridWorld):
-    position = env.get_position(env.state)
+def get_grid_shape():
+    if global_environment is None:
+        raise ValueError("Cannot get shape of None env")
+    return (global_environment.height, global_environment.width)
+
+
+def get_current_position():
+    if global_environment is None:
+        raise ValueError("Cannot get position of None env")
+    position = global_environment.get_position(global_environment.state)
     return {"row": int(position[0]), "col": int(position[1])}
+
+
+def reset_globals():
+    global global_environment
+    global global_agent
+    global global_experiment
+    global_environment = None
+    global_agent = None
+    global_experiment = None
