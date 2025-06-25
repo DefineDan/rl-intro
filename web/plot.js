@@ -63,6 +63,4 @@ function plotEpisodicRewards(episodicRewards, containerId = "episodic-reward-plo
   Plotly.newPlot(containerId, [trace], layout, {responsive: true});
 }
 
-// Make it available globally
-window.plotCumulativeReward = plotCumulativeReward;
-window.plotEpisodicRewards = plotEpisodicRewards; 
+export { plotCumulativeReward, plotEpisodicRewards };

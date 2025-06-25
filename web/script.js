@@ -1,3 +1,7 @@
+import { plotCumulativeReward, plotEpisodicRewards } from './plot.js';
+import Alpine from 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/module.esm.js';
+window.Alpine = Alpine;
+
 const StateKind = {
   EMPTY: 0,
   START: 1,
@@ -267,16 +271,14 @@ window.gridWorld = () => ({
       const results = analysis.toJs({dict_converter: Object.fromEntries});
 
       const cumulativeReward = JSON.parse(results.cumulative_reward);
-      if (window.plotCumulativeReward) {
-        window.plotCumulativeReward(cumulativeReward, "reward-plot");
-      }
       const episodicRewards = JSON.parse(results.episodic_rewards);
-      if (window.plotEpisodicRewards) {
-        window.plotEpisodicRewards(episodicRewards, "episodic-reward-plot");
-      }
-      this.agentValues = results.values;
+
+      plotCumulativeReward(cumulativeReward, "reward-plot");
+      plotEpisodicRewards(episodicRewards, "episodic-reward-plot");
+
       const position = await pyodide.runPythonAsync("get_current_position()");
       this.agentPos = position.toJs();
+      this.agentValues = results.values;
 
       output.textContent = "Analysis complete!";
     } catch (error) {
@@ -285,3 +287,6 @@ window.gridWorld = () => ({
     }
   },
 });
+
+
+Alpine.start();
