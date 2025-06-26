@@ -8,6 +8,7 @@
 	import GridControls from './GridControls.svelte';
 	import SimulationControls from './SimulationControls.svelte';
 	import SpeedControl from './SpeedControl.svelte';
+	import { plotCumulativeReward, plotEpisodicRewards } from './plot.js';
 
 	let grid = $state(JSON.parse(JSON.stringify(initialGrid)));
 	let mode = $state(GridMode.CONFIG);
@@ -99,6 +100,36 @@
 		agentValues = null;
 		output = 'Ready! Configure the grid and click Confirm Grid to start.';
 	}
+
+	async function runFullAnalysis() {
+		output = 'Running full analysis...';
+		try {
+			pause();
+			const agent_config_for_python = {
+				agent_type: agentConfig.agentType,
+				learning_rate: agentConfig.learningRate,
+				discount: agentConfig.discount,
+				epsilon: agentConfig.epsilon
+			};
+			await pyInterface.initializeSimulation(grid, agent_config_for_python);
+			await pyInterface.runFullExperiment();
+			const results = await pyInterface.analyzeExperimentLogs();
+
+			const cumulativeReward = JSON.parse(results.cumulative_reward);
+			const episodicRewards = JSON.parse(results.episodic_rewards);
+
+			plotCumulativeReward(cumulativeReward, "reward-plot");
+			plotEpisodicRewards(episodicRewards, "episodic-reward-plot");
+
+			agentPos = await pyInterface.getCurrentPosition();
+			agentValues = results.values;
+
+			output = 'Analysis complete!';
+		} catch (error) {
+			output = `Error: ${error.message}`;
+			console.error(error);
+		}
+	}
 </script>
 
 <ModeToggle {mode} {GridMode} {agentValues} setMode={newMode => mode = newMode} />
@@ -109,7 +140,10 @@
 <AgentConfig bind:config={agentConfig} />
 <SimulationControls {confirmGrid} {step} {run} {pause} {reset} />
 <SpeedControl {stepDelay} setStepDelay={val => stepDelay = val} {isRunning} {run} />
+<button onclick={runFullAnalysis}>Run Full Analysis</button>
 <pre>{output}</pre>
+<div id="reward-plot"></div>
+<div id="episodic-reward-plot"></div>
 
 <style>
 	pre {
