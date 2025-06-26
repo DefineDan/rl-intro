@@ -133,11 +133,17 @@
 </script>
 
 <ModeToggle {mode} {GridMode} {agentValues} setMode={newMode => mode = newMode} />
-{#if mode === GridMode.CONFIG}
-    <GridControls {selectedStateKind} setSelectedState={state => selectedStateKind = state} />
-{/if}
-<Grid {grid} {mode} {agentPos} {agentValues} onclick={updateCellKind} />
-<AgentConfig bind:config={agentConfig} />
+<div class="sim-layout">
+	<div class="sim-left">
+		<Grid {grid} {mode} {agentPos} {agentValues} onclick={updateCellKind} />
+		{#if mode === GridMode.CONFIG}
+			<GridControls {selectedStateKind} setSelectedState={state => selectedStateKind = state} />
+		{/if}
+	</div>
+	<div class="sim-right">
+		<AgentConfig bind:config={agentConfig} />
+	</div>
+</div>
 <SimulationControls {confirmGrid} {step} {run} {pause} {reset} />
 <SpeedControl {stepDelay} setStepDelay={val => stepDelay = val} {isRunning} {run} />
 <button onclick={runFullAnalysis}>Run Full Analysis</button>
@@ -146,6 +152,15 @@
 <div id="episodic-reward-plot"></div>
 
 <style>
+	.sim-layout {
+		display: flex;
+		flex-direction: row;
+		align-items: flex-start;
+		gap: 50px;
+	}
+	.sim-right {
+		min-width: 260px;
+	}
 	pre {
 		margin-top: 12px;
 		padding: 12px;

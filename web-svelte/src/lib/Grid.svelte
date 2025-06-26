@@ -1,5 +1,5 @@
 <script>
-    import { StateKind, stateStyles, GridMode } from './constants.js';
+    import { StateKind, stateBootstrapClasses, GridMode } from './constants.js';
     import { interpolateViridis } from 'd3-scale-chromatic';
 
     let {
@@ -11,6 +11,8 @@
         onclick,
     } = $props();
 
+
+
     function getCellStyle(kind, row, col) {
         if (mode === GridMode.VALUES && agentValues) {
             const idx = row * gridWidth + col;
@@ -20,10 +22,15 @@
             const norm = (value - min) / (max - min || 1);
             const color = interpolateViridis(norm);
             return `background: ${color}; border: 2px solid ${color}; color: #fff;`;
-        } else {
-            const style = stateStyles[kind] || stateStyles[StateKind.EMPTY];
-            return `background: ${style.background}; border: 2px solid ${style.border};`;
         }
+        return '';
+    }
+
+    function getCellClass(kind) {
+        if (mode === GridMode.VALUES && agentValues) {
+            return "btn btn-outline-primary";
+        }
+        return `btn ${stateBootstrapClasses[kind] || "btn-secondary"}`;
     }
 
     function getCellContent(row, col) {
@@ -55,7 +62,7 @@
         {#each row as cell, j}
             <button
                 type="button"
-                class="cell"
+                class={"cell btn "+ getCellClass(cell)}
                 style={getCellStyle(cell, i, j)}
                 onclick={() => {
                     if (mode === GridMode.CONFIG) {
@@ -72,7 +79,6 @@
 <style>
     .grid {
         display: grid;
-        border: 1px solid #ccc;
     }
     .cell {
         width: 40px;
@@ -80,16 +86,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: monospace;
         font-size: 1.2em;
         cursor: pointer;
         user-select: none;
 
-        /* Reset button styles */
-        background: none;
-        border: none;
-        padding: 0;
+ 
         font: inherit;
-        color: inherit;
     }
 </style> 

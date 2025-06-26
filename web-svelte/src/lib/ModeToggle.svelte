@@ -3,25 +3,28 @@
   let { mode, agentValues, setMode } = $props();
 </script>
 
-<div class="mode-toggle" style="margin-bottom: 12px; display: flex; gap: 8px;">
-  <button
-    class:active={mode === GridMode.CONFIG}
-    onclick={() => setMode(GridMode.CONFIG)}
-  >
-    Grid Config
+<ul class="nav nav-tabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button
+      class="nav-link {mode === GridMode.CONFIG ? 'active' : ''}"
+      aria-selected={mode === GridMode.CONFIG}
+      role="tab"
+      onclick={() => setMode(GridMode.CONFIG)}
+      tabindex={mode === GridMode.CONFIG ? 0 : -1}
+    >
+      Grid Config
   </button>
-  <button
-    class:active={mode === GridMode.VALUES}
-    onclick={() => setMode(GridMode.VALUES)}
-    disabled={!agentValues}
-  >
-    Agent Values
-  </button>
-</div>
-
-<style>
-  .active {
-    background-color: #007bff;
-    color: white;
-  }
-</style>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button
+      class="nav-link {mode === GridMode.VALUES ? 'active' : ''} {agentValues ? '' : 'disabled'}"
+      aria-selected={mode === GridMode.VALUES}
+      role="tab"
+      onclick={() => agentValues && setMode(GridMode.VALUES)}
+      tabindex={agentValues ? 0 : -1}
+      aria-disabled={!agentValues}
+    >
+      Agent Values
+    </button>
+  </li>
+</ul>

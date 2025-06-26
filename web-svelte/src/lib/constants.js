@@ -6,12 +6,12 @@ export const StateKind = {
   WALL: 4,
 };
 
-export const stateStyles = {
-  [StateKind.EMPTY]: { background: "#f0f0f0", border: "#ccc" },
-  [StateKind.START]: { background: "#4caf50", border: "#388e3c" },
-  [StateKind.TERMINAL]: { background: "#2196f3", border: "#1976d2" },
-  [StateKind.CLIFF]: { background: "#e53935", border: "#b71c1c" },
-  [StateKind.WALL]: { background: "#757575", border: "#424242" },
+export const stateBootstrapClasses = {
+  [StateKind.EMPTY]: "btn-dark",
+  [StateKind.START]: "btn-info",
+  [StateKind.TERMINAL]: "btn-success",
+  [StateKind.CLIFF]: "btn-danger",
+  [StateKind.WALL]: "btn-primary",
 };
 
 export const stateLabels = {
