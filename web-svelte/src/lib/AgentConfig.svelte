@@ -1,6 +1,5 @@
 <script>
     import { AgentType } from './constants.js';
-
     let { config } = $props();
 </script>
 
