@@ -5,7 +5,7 @@
 	let math = "Q(s,a) \\leftarrow Q(s,a) + \\alpha \\left( r + \\gamma \\sum_{a'} Q(s', a') - Q(s,a) \\right)";
 
 </script>
-
+<div class=page-container>
 <h1>RL Intro in Svelte</h1>
 <p>This is a simple reinforcement learning simulation built with Svelte.</p>
 <p>
@@ -14,3 +14,5 @@
 
 
 <Simulation />
+
+</div>
