@@ -38,7 +38,7 @@
 	let gridHeight = $state(initialGrid.length);
 	let cumulativeReward = $state(null);
 	let episodicRewards = $state(null);
-	let epsiodeNum = $state(0)
+	let episodeNum = $state(0)
 
 	onMount(() => {
 		output = 'Initializing Python environment...';
@@ -75,8 +75,8 @@
 			const stepResult = await pyInterface.stepExperiment();
 			agentPos = stepResult.position;
 			agentValues = stepResult.values;
-			epsiodeNum = stepResult.step_log.episode
-			output = `Episode: ${epsiodeNum}, Step: ${
+			episodeNum = stepResult.step_log.episode
+			output = `Episode: ${episodeNum}, Step: ${
 				stepResult.step_log.step
 			}, Reward: ${stepResult.step_log.reward.toFixed(2)}`;
 
@@ -131,6 +131,7 @@
 
 			agentPos = await pyInterface.getCurrentPosition();
 			agentValues = results.values;
+			episodeNum = experimentConfig.nEpisodes;
 			output = 'Experiment Analysis complete!';
 		} catch (error) {
 			output = `Error: ${error.message}`;
@@ -189,6 +190,9 @@
 		<Plots {cumulativeReward} {episodicRewards} />
 	{/if}
 	{#if mode !== GridMode.CONFIG && isInitialized}
+		<div class="progress mb-3">
+			<div class="progress-bar progress-bar-animated" role="progressbar" aria-valuenow={episodeNum} aria-valuemin="0" aria-valuemax={experimentConfig.nEpisodes} style={"width: " + (episodeNum / experimentConfig.nEpisodes * 100) + "%;"}></div>
+		</div>
 		<div class="sim-controls-box alert alert-primary">
 			<SimulationControls {step} {run} {pause} {reset} {runFullAnalysis} />
 			<SpeedControl {stepDelay} setStepDelay={val => stepDelay = val} {isRunning} {run} />
