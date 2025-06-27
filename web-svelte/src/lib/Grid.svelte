@@ -89,8 +89,6 @@
         font-size: 1.2em;
         cursor: pointer;
         user-select: none;
-
- 
         font: inherit;
     }
 </style> 

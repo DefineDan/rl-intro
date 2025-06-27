@@ -9,12 +9,15 @@
 	import SimulationControls from './SimulationControls.svelte';
 	import SpeedControl from './SpeedControl.svelte';
 	import { plotCumulativeReward, plotEpisodicRewards } from './plot.js';
+	import { faCheck } from '@fortawesome/free-solid-svg-icons';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 
 	let grid = $state(JSON.parse(JSON.stringify(initialGrid)));
 	let mode = $state(GridMode.CONFIG);
 	let selectedStateKind = $state(StateKind.EMPTY);
 	let agentPos = $state(null);
 	let agentValues = $state(null);
+	let agentVisits = $state(null);
 	let agentConfig = $state({
 		agentType: AgentType.EXPECTED_SARSA,
 		learningRate: 0.3,
@@ -24,7 +27,8 @@
 	let output = $state('Loading...');
 	let isRunning = $state(false);
 	let stepInterval = $state(null);
-	let stepDelay = $state(200);
+	let stepDelay = $state(205);
+	let isInitialized = $state(false);
 
 	onMount(() => {
 		output = 'Initializing Python environment...';
@@ -44,6 +48,7 @@
 
 	async function confirmGrid() {
 		output = 'Initializing simulation...';
+		mode = GridMode.VIEW
 		try {
 			const agent_config_for_python = {
 				agent_type: agentConfig.agentType,
@@ -54,6 +59,7 @@
 			await pyInterface.initializeSimulation(grid, agent_config_for_python);
 			agentPos = await pyInterface.getCurrentPosition();
 			output = 'Simulation initialized. Ready to step or run.';
+			isInitialized = true;
 		} catch (error) {
 			output = `Error: ${error.message}`;
 			console.error(error);
@@ -98,7 +104,8 @@
 		mode = GridMode.CONFIG;
 		agentPos = null;
 		agentValues = null;
-		output = 'Ready! Configure the grid and click Confirm Grid to start.';
+		output = 'Ready! Configure the grid and click Confirm Configuration to start.';
+		isInitialized = false;
 	}
 
 	async function runFullAnalysis() {
@@ -132,41 +139,76 @@
 	}
 </script>
 
-<ModeToggle {mode} {GridMode} {agentValues} setMode={newMode => mode = newMode} />
-<div class="sim-layout">
-	<div class="sim-left">
-		<Grid {grid} {mode} {agentPos} {agentValues} onclick={updateCellKind} />
-		{#if mode === GridMode.CONFIG}
+<div class="card border-dark sim-container">
+	<pre class="alert alert-dismissible alert-info">{output}</pre>
+	<div class="sim-layout">
+		<div class="sim-left">
+			<ModeToggle {mode} {GridMode} {agentValues} setMode={newMode => mode = newMode} />
+			<Grid {grid} {mode} {agentPos} {agentValues} onclick={updateCellKind} editable={mode === GridMode.CONFIG} />
+		</div>
+		<div class="sim-right">
+			<AgentConfig bind:config={agentConfig} />
+		</div>
+	</div>
+	{#if mode === GridMode.CONFIG}
+		<div class="config-controls-row">
 			<GridControls {selectedStateKind} setSelectedState={state => selectedStateKind = state} />
+			<button class="btn btn-success btn-config-confirm" onclick={confirmGrid}><FontAwesomeIcon icon={faCheck} /> Confirm Configuration</button>
+		</div>
+	{/if}
+	<div class="sim-controls-row">
+		{#if mode !== GridMode.CONFIG && isInitialized}
+			<SimulationControls {step} {run} {pause} {reset} {runFullAnalysis} />
+			<SpeedControl {stepDelay} setStepDelay={val => stepDelay = val} {isRunning} {run} />
 		{/if}
 	</div>
-	<div class="sim-right">
-		<AgentConfig bind:config={agentConfig} />
-	</div>
+	<div id="reward-plot"></div>
+	<div id="episodic-reward-plot"></div>
 </div>
-<SimulationControls {confirmGrid} {step} {run} {pause} {reset} />
-<SpeedControl {stepDelay} setStepDelay={val => stepDelay = val} {isRunning} {run} />
-<button onclick={runFullAnalysis}>Run Full Analysis</button>
-<pre>{output}</pre>
-<div id="reward-plot"></div>
-<div id="episodic-reward-plot"></div>
 
 <style>
 	.sim-layout {
 		display: flex;
 		flex-direction: row;
 		align-items: flex-start;
+		justify-content: space-between;
 		gap: 50px;
 	}
 	.sim-right {
+		padding: 5px;
 		min-width: 260px;
 	}
 	pre {
-		margin-top: 12px;
+		margin-bottom: 2rem;
 		padding: 12px;
-		background: #f0f0f0;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		white-space: pre-wrap;
+		font-family: 'Menlo', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+		background: #222;
+		color: #0dc814;
+	}
+	.sim-container {
+		padding: 1rem;
+	}
+	.sim-controls-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 1.5rem;
+		/* margin-top: 1.5rem; */
+	}
+
+	.config-controls-row button{
+		margin-top: 0;
+		margin: 0.1em;
+		margin-top: 0.5em;
+	}
+	.config-controls-row {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: 1rem;
+		margin-top: 0.5em;
+	}
+	.btn-config-confirm{
+		flex: 1;
 	}
 </style> 

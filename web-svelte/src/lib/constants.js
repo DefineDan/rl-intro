@@ -24,7 +24,9 @@ export const stateLabels = {
 
 export const GridMode = {
   CONFIG: "config",
+  VIEW: "view",
   VALUES: "values",
+  VISITS: "visits",
 };
 
 export const initialGrid = [

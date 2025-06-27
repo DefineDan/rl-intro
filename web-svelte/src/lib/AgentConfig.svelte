@@ -3,7 +3,7 @@
     let { config } = $props();
 </script>
 
-<div class="card bg-primary mb-3 dense-card" style="max-width: 18rem;">
+<div class="card border-primary mb-3 dense-card" style="max-width: 18rem;">
   <div class="card-header" style="padding: 0.4rem 0.8rem; font-size: 1rem;">Agent Configuration</div>
   <div class="card-body" style="padding: 0.7rem 0.8rem;">
     <div class="agent-config">
@@ -36,9 +36,6 @@
         display: flex;
         flex-direction: column;
         gap: 3px;
-        margin-top: 0;
-        padding: 0;
-        border-radius: 0;
     }
 
     label {

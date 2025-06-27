@@ -6,7 +6,7 @@
 
 </script>
 <div class=page-container>
-<h1>RL Intro in Svelte</h1>
+<h1>Introduction to Reinforcement Learning</h1>
 <p>This is a simple reinforcement learning simulation built with Svelte.</p>
 <p>
 	Q-learning update rule: <Latex {math} />

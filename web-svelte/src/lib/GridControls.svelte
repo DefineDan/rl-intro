@@ -7,7 +7,7 @@
 	}
 </script>
 
-<div class="controls">
+<div class="cell-controls">
 	{#each Object.entries(stateLabels) as [state, label]}
 		<button
 			class={`${getOutlineClass(state)}${selectedStateKind === parseInt(state) ? ' active' : ''}`}
@@ -19,8 +19,8 @@
 </div>
 
 <style>
-	.controls button {
-		margin: 0.2em;
+	.cell-controls button {
+		margin: 0.1em;
 		margin-top: 0.5em;
 	}
 </style>
