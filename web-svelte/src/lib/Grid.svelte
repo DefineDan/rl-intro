@@ -4,13 +4,13 @@
 
     let {
         grid,
-        gridWidth = 10,
         mode = GridMode.CONFIG,
         agentValues = null,
         agentPos = null,
         onclick,
-    } = $props();
+    } = $props()
 
+    let gridWidth = $derived(grid[0].length)
 
 
     function getCellStyle(kind, row, col) {
@@ -58,7 +58,7 @@
 </script>
 
 <div class="grid" style="grid-template-columns: repeat({gridWidth}, 40px)">
-    {#each [...grid] as row, i}
+    {#each grid as row, i}
         {#each row as cell, j}
             <button
                 type="button"

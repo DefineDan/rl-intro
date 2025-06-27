@@ -18,18 +18,18 @@ function plotCumulativeReward(cumulativeReward, containerId = "reward-plot") {
       y: yValues,
       mode: 'lines',
       name: col,
-      line: { width: 2 },
+      line: { width: 2, color: '#ea39b8' },
     });
   });
 
   const layout = {
     title: 'Cumulative Reward',
-    xaxis: { title: 'Global Step' },
-    yaxis: { title: 'Reward' },
+    xaxis: { title: 'Global Step', gridcolor: 'rgba(224,224,224,0.1)' },
+    yaxis: { title: 'Reward', gridcolor: 'rgba(224,224,224,0.1)' },
     margin: { t: 40, r: 30, b: 40, l: 50 },
     legend: { x: 1, y: 1 },
-    width: 600,
-    height: 300,
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    paper_bgcolor: 'rgba(0,0,0,0)',
   };
 
   Plotly.newPlot(containerId, traces, layout, {responsive: true});
@@ -50,17 +50,17 @@ function plotEpisodicRewards(episodicRewards, containerId = "episodic-reward-plo
     y: rewards,
     mode: 'lines',
     name: 'Reward',
-    line: { width: 2 },
+    line: { width: 2, color: '#ea39b8' },
   };
 
   const layout = {
     title: 'Episodic Reward',
-    xaxis: { title: 'Episode' },
-    yaxis: { title: 'Reward' },
+    xaxis: { title: 'Episode', gridcolor: 'rgba(224,224,224,0.1)' },
+    yaxis: { title: 'Reward', gridcolor: 'rgba(224,224,224,0.1)' },
     margin: { t: 40, r: 30, b: 40, l: 50 },
     legend: { x: 1, y: 1 },
-    width: 600,
-    height: 300,
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    paper_bgcolor: 'rgba(0,0,0,0)',
   };
 
   Plotly.newPlot(containerId, [trace], layout, {responsive: true});

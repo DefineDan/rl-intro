@@ -8,9 +8,9 @@
 	import GridControls from './GridControls.svelte';
 	import SimulationControls from './SimulationControls.svelte';
 	import SpeedControl from './SpeedControl.svelte';
-	import { plotCumulativeReward, plotEpisodicRewards } from './plot.js';
 	import { faCheck } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import Plots from './Plots.svelte';
 
 	let grid = $state(JSON.parse(JSON.stringify(initialGrid)));
 	let mode = $state(GridMode.CONFIG);
@@ -29,6 +29,10 @@
 	let stepInterval = $state(null);
 	let stepDelay = $state(205);
 	let isInitialized = $state(false);
+	let gridWidth = $state(initialGrid[0].length);
+	let gridHeight = $state(initialGrid.length);
+	let cumulativeReward = $state(null);
+	let episodicRewards = $state(null);
 
 	onMount(() => {
 		output = 'Initializing Python environment...';
@@ -106,6 +110,8 @@
 		agentValues = null;
 		output = 'Ready! Configure the grid and click Confirm Configuration to start.';
 		isInitialized = false;
+		cumulativeReward = null;
+		episodicRewards = null;
 	}
 
 	async function runFullAnalysis() {
@@ -122,19 +128,40 @@
 			await pyInterface.runFullExperiment();
 			const results = await pyInterface.analyzeExperimentLogs();
 
-			const cumulativeReward = JSON.parse(results.cumulative_reward);
-			const episodicRewards = JSON.parse(results.episodic_rewards);
-
-			plotCumulativeReward(cumulativeReward, "reward-plot");
-			plotEpisodicRewards(episodicRewards, "episodic-reward-plot");
+			cumulativeReward = JSON.parse(results.cumulative_reward);
+			episodicRewards = JSON.parse(results.episodic_rewards);
 
 			agentPos = await pyInterface.getCurrentPosition();
 			agentValues = results.values;
-
-			output = 'Analysis complete!';
+			output = 'Experiment Analysis complete!';
 		} catch (error) {
 			output = `Error: ${error.message}`;
 			console.error(error);
+		}
+	}
+
+	function addRow() {
+		const newRow = Array(gridWidth).fill(StateKind.EMPTY);
+		grid = [...grid, newRow];
+		gridHeight = grid.length;
+	}
+
+	function removeRow() {
+		if (grid.length > 1) {
+			grid = grid.slice(0, -1);
+			gridHeight = grid.length;
+		}
+	}
+
+	function addColumn() {
+		grid = grid.map(row => [...row, StateKind.EMPTY]);
+		gridWidth = grid[0].length;
+	}
+
+	function removeColumn() {
+		if (grid[0].length > 1) {
+			grid = grid.map(row => row.slice(0, -1));
+			gridWidth = grid[0].length;
 		}
 	}
 </script>
@@ -152,7 +179,8 @@
 	</div>
 	{#if mode === GridMode.CONFIG}
 		<div class="config-controls-row">
-			<GridControls {selectedStateKind} setSelectedState={state => selectedStateKind = state} />
+			<GridControls {selectedStateKind} setSelectedState={state => selectedStateKind = state}
+				addRow={addRow} removeRow={removeRow} addColumn={addColumn} removeColumn={removeColumn} />
 			<button class="btn btn-success btn-config-confirm" onclick={confirmGrid}><FontAwesomeIcon icon={faCheck} /> Confirm Configuration</button>
 		</div>
 	{/if}
@@ -162,8 +190,9 @@
 			<SpeedControl {stepDelay} setStepDelay={val => stepDelay = val} {isRunning} {run} />
 		{/if}
 	</div>
-	<div id="reward-plot"></div>
-	<div id="episodic-reward-plot"></div>
+	{#if cumulativeReward && episodicRewards}
+		<Plots {cumulativeReward} {episodicRewards} />
+	{/if}
 </div>
 
 <style>
