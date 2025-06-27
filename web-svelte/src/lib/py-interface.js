@@ -29,16 +29,37 @@ export async function getPyodide() {
     return pyodidePromise;
 }
 
-export async function initializeSimulation(grid, agentConfig) {
+export function getAgentConfigForPython(agentConfig) {
+    return {
+        agent_type: agentConfig.agentType,
+        learning_rate: agentConfig.learningRate,
+        discount: agentConfig.discount,
+        epsilon: agentConfig.epsilon
+    };
+}
+
+export function getExperimentConfigForPython(experimentConfig) {
+    return {
+        n_episodes: experimentConfig.nEpisodes,
+        max_steps: experimentConfig.maxSteps
+    };
+}
+
+export async function initializeSimulation(grid, agentConfig, experimentConfig) {
     const pyodide = await getPyodide();
     await pyodide.runPythonAsync('reset_globals()');
-    const pyGrid = pyodide.toPy(grid);
-    pyodide.globals.set('pyGrid', pyGrid);
-    await pyodide.runPythonAsync(`create_gridworld(pyGrid)`);
-    const pyAgentConfig = pyodide.toPy(agentConfig);
+
+    const pyGridConfig = pyodide.toPy(grid);
+    pyodide.globals.set('pyGridConfig', pyGridConfig);
+    await pyodide.runPythonAsync(`create_gridworld(pyGridConfig)`);
+
+    const pyAgentConfig = pyodide.toPy(getAgentConfigForPython(agentConfig));
     pyodide.globals.set('pyAgentConfig', pyAgentConfig);
     await pyodide.runPythonAsync(`create_agent(pyAgentConfig)`);
-    await pyodide.runPythonAsync(`create_experiment()`);
+
+    const pyExperimentConfig = pyodide.toPy(getExperimentConfigForPython(experimentConfig));
+    pyodide.globals.set('pyExperimentConfig', pyExperimentConfig);
+    await pyodide.runPythonAsync(`create_experiment(pyExperimentConfig)`);
 }
 
 export async function getCurrentPosition() {

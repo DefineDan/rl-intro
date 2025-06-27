@@ -2,6 +2,7 @@
 	import Grid from './Grid.svelte';
 	import { GridMode, initialGrid, StateKind, AgentType } from './constants.js';
 	import AgentConfig from './AgentConfig.svelte';
+	import ExperimentConfig from './ExperimentConfig.svelte';
 	import * as pyInterface from './py-interface.js';
 	import { onMount } from 'svelte';
 	import ModeToggle from './ModeToggle.svelte';
@@ -23,6 +24,10 @@
 		learningRate: 0.3,
 		discount: 1.0,
 		epsilon: 0.1
+	});
+	let experimentConfig = $state({
+		nEpisodes: 500,
+		maxSteps: 200
 	});
 	let output = $state('Loading...');
 	let isRunning = $state(false);
@@ -55,13 +60,7 @@
 		output = 'Initializing simulation...';
 		mode = GridMode.VIEW
 		try {
-			const agent_config_for_python = {
-				agent_type: agentConfig.agentType,
-				learning_rate: agentConfig.learningRate,
-				discount: agentConfig.discount,
-				epsilon: agentConfig.epsilon
-			};
-			await pyInterface.initializeSimulation(grid, agent_config_for_python);
+			await pyInterface.initializeSimulation(grid, agentConfig, experimentConfig);
 			agentPos = await pyInterface.getCurrentPosition();
 			output = 'Simulation initialized. Ready to step or run.';
 			isInitialized = true;
@@ -123,13 +122,7 @@
 		output = 'Running full analysis...';
 		try {
 			pause();
-			const agent_config_for_python = {
-				agent_type: agentConfig.agentType,
-				learning_rate: agentConfig.learningRate,
-				discount: agentConfig.discount,
-				epsilon: agentConfig.epsilon
-			};
-			await pyInterface.initializeSimulation(grid, agent_config_for_python);
+			await pyInterface.initializeSimulation(grid, agentConfig, experimentConfig);
 			await pyInterface.runFullExperiment();
 			const results = await pyInterface.analyzeExperimentLogs();
 
@@ -175,11 +168,14 @@
 	<pre class="alert alert-dismissible alert-info">{output}</pre>
 	<div class="sim-layout">
 		<div class="sim-left">
-			<ModeToggle {mode} {GridMode} {agentValues} setMode={newMode => mode = newMode} />
-			<Grid {grid} {mode} {agentPos} {agentValues} onclick={updateCellKind} editable={mode === GridMode.CONFIG} />
+			<div class="grid-center">
+				<ModeToggle {mode} {GridMode} {agentValues} setMode={newMode => mode = newMode} />
+				<Grid {grid} {mode} {agentPos} {agentValues} onclick={updateCellKind} editable={mode === GridMode.CONFIG} />
+			</div>
 		</div>
 		<div class="sim-right">
 			<AgentConfig bind:config={agentConfig} />
+			<ExperimentConfig bind:config={experimentConfig} />
 		</div>
 	</div>
 	{#if mode === GridMode.CONFIG}
@@ -205,12 +201,26 @@
 		display: flex;
 		flex-direction: row;
 		align-items: flex-start;
-		justify-content: space-between;
+		justify-content: stretch;
 		gap: 50px;
+	}
+	.sim-left {
+		flex: 1 1 0%;
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.grid-center {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-start;
+		width: 100%;
 	}
 	.sim-right {
 		padding: 5px;
 		min-width: 260px;
+		max-width: 340px;
 	}
 	pre {
 		margin-bottom: 2rem;

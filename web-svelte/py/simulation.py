@@ -89,10 +89,11 @@ def create_agent(config: dict) -> Agent:
     return global_agent
 
 
-def create_experiment(
-    # TODO: pass in config
-    experiment_config=ExperimentConfig(n_episodes=1000, max_steps=200)
-):
+def create_experiment(config: dict) -> Experiment:
+    experiment_config = ExperimentConfig(
+        n_episodes=config.get("n_episodes", 500),
+        max_steps=config.get("max_steps", 200),
+    )
     if global_agent is None or global_environment is None:
         raise ValueError("Agent or environment not initialized")
     global global_experiment
