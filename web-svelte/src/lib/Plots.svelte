@@ -21,6 +21,6 @@
     }
     .plot-container {
         width: 50%;
-        height: 20em;
+        height: 17em;
     }
 </style>

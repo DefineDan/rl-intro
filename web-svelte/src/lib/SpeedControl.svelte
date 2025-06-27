@@ -36,7 +36,7 @@
 
 <style>
 	.speed-control {
-		margin-top: 12px;
+		margin-top: 0.5em;
 		display: flex;
 		align-items: center;
 		gap: 8px;

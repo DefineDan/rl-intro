@@ -18,7 +18,8 @@ function plotCumulativeReward(cumulativeReward, containerId = "reward-plot") {
       y: yValues,
       mode: 'lines',
       name: col,
-      line: { width: 2, color: '#ea39b8' },
+      line: { width: 2, color: '#6f42c1' },
+      hovertemplate: 'Global Step: %{x}<br>Accumulated Reward: %{y}<extra></extra>',
     });
   });
 
@@ -50,7 +51,8 @@ function plotEpisodicRewards(episodicRewards, containerId = "episodic-reward-plo
     y: rewards,
     mode: 'lines',
     name: 'Reward',
-    line: { width: 2, color: '#ea39b8' },
+    line: { width: 2, color: '#6f42c1' },
+    hovertemplate: 'Episode: %{x}<br>Reward: %{y}<extra></extra>',
   };
 
   const layout = {

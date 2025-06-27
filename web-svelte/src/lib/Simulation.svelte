@@ -27,12 +27,13 @@
 	let output = $state('Loading...');
 	let isRunning = $state(false);
 	let stepInterval = $state(null);
-	let stepDelay = $state(205);
+	let stepDelay = $state(150);
 	let isInitialized = $state(false);
 	let gridWidth = $state(initialGrid[0].length);
 	let gridHeight = $state(initialGrid.length);
 	let cumulativeReward = $state(null);
 	let episodicRewards = $state(null);
+	let epsiodeNum = $state(0)
 
 	onMount(() => {
 		output = 'Initializing Python environment...';
@@ -75,12 +76,16 @@
 			const stepResult = await pyInterface.stepExperiment();
 			agentPos = stepResult.position;
 			agentValues = stepResult.values;
-			output = `Episode: ${stepResult.step_log.episode}, Step: ${
+			epsiodeNum = stepResult.step_log.episode
+			output = `Episode: ${epsiodeNum}, Step: ${
 				stepResult.step_log.step
 			}, Reward: ${stepResult.step_log.reward.toFixed(2)}`;
 
 			if (stepResult.step_log.terminal) {
 				output += ' (Episode finished)';
+				const results = await pyInterface.analyzeExperimentLogs();
+				cumulativeReward = JSON.parse(results.cumulative_reward);
+				episodicRewards = JSON.parse(results.episodic_rewards);
 			}
 		} catch (error) {
 			output = `Error: ${error.message}`;
@@ -184,14 +189,14 @@
 			<button class="btn btn-success btn-config-confirm" onclick={confirmGrid}><FontAwesomeIcon icon={faCheck} /> Confirm Configuration</button>
 		</div>
 	{/if}
-	<div class="sim-controls-row">
-		{#if mode !== GridMode.CONFIG && isInitialized}
-			<SimulationControls {step} {run} {pause} {reset} {runFullAnalysis} />
-			<SpeedControl {stepDelay} setStepDelay={val => stepDelay = val} {isRunning} {run} />
-		{/if}
-	</div>
 	{#if cumulativeReward && episodicRewards}
 		<Plots {cumulativeReward} {episodicRewards} />
+	{/if}
+	{#if mode !== GridMode.CONFIG && isInitialized}
+		<div class="sim-controls-box alert alert-primary">
+			<SimulationControls {step} {run} {pause} {reset} {runFullAnalysis} />
+			<SpeedControl {stepDelay} setStepDelay={val => stepDelay = val} {isRunning} {run} />
+		</div>
 	{/if}
 </div>
 
@@ -217,13 +222,6 @@
 	.sim-container {
 		padding: 1rem;
 	}
-	.sim-controls-row {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		gap: 1.5rem;
-		/* margin-top: 1.5rem; */
-	}
 
 	.config-controls-row button{
 		margin-top: 0;
@@ -239,5 +237,14 @@
 	}
 	.btn-config-confirm{
 		flex: 1;
+	}
+	.sim-controls-box {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		margin: 1rem auto 0 auto;
+		border-radius: 1rem !important;
+		max-width: 100%;
 	}
 </style> 

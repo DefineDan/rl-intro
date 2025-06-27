@@ -41,3 +41,12 @@ export const AgentType = {
   Q_LEARNING: "q_learning",
   SARSA: "sarsa",
 }; 
+
+//   --bs-primary: #6f42c1;
+//   --bs-secondary: #ea39b8;
+//   --bs-success: #3cf281;
+//   --bs-info: #1ba2f6;
+//   --bs-warning: #ffc107;
+//   --bs-danger: #e44c55;
+//   --bs-light: #44d9e8;
+//   --bs-dark: #170229;
