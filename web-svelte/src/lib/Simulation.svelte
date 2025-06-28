@@ -1,14 +1,14 @@
 <script>
 	import Grid from './Grid.svelte';
 	import { GridMode, initialGrid, StateKind, AgentType } from './constants.js';
-	import AgentConfig from './AgentConfig.svelte';
-	import ExperimentConfig from './ExperimentConfig.svelte';
+	import AgentConfig from './ConfigAgent.svelte';
+	import ExperimentConfig from './ConfigExperiment.svelte';
 	import * as pyInterface from './py-interface.js';
 	import { onMount } from 'svelte';
-	import ModeToggle from './ModeToggle.svelte';
-	import GridControls from './GridControls.svelte';
-	import SimulationControls from './SimulationControls.svelte';
-	import SpeedControl from './SpeedControl.svelte';
+	import ModeToggle from './ControlsGrid.svelte';
+	import GridControls from './ConfigGrid.svelte';
+	import SimulationControls from './ControlsSimulation.svelte';
+	import SpeedControl from './ControlsSpeed.svelte';
 	import { faCheck } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import Plots from './Plots.svelte';
