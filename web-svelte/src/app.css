@@ -1,11 +1,4 @@
-.page-container {
-    max-width: 66rem;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 2rem;
-    padding-right: 2rem;
-    /* display: flex;
-  flex-direction: column;
-  align-items: center; */
-
+html, body {
+    background-color: #0e0117;
+    color-scheme: dark;
 }

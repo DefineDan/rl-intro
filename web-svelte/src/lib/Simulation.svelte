@@ -34,12 +34,13 @@
 	let stepInterval = $state(null);
 	let stepDelay = $state(150);
 	let isInitialized = $state(false);
-	let gridWidth = $state(initialGrid[0].length);
-	let gridHeight = $state(initialGrid.length);
 	let cumulativeReward = $state(null);
 	let episodicRewards = $state(null);
-	let episodeNum = $state(0)
-
+	let episodeNum = $state(0);
+	
+	let gridWidth = $derived(grid[0].length);
+	let gridHeight = $derived(grid.length);
+	
 	onMount(() => {
 		output = 'Initializing Python environment...';
 		pyInterface.getPyodide()
@@ -132,7 +133,7 @@
 			agentPos = await pyInterface.getCurrentPosition();
 			agentValues = results.values;
 			episodeNum = experimentConfig.nEpisodes;
-			output = 'Experiment Analysis complete!';
+			output = 'Experiment complete! Analysis done.';
 		} catch (error) {
 			output = `Error: ${error.message}`;
 			console.error(error);
@@ -142,25 +143,21 @@
 	function addRow() {
 		const newRow = Array(gridWidth).fill(StateKind.EMPTY);
 		grid = [...grid, newRow];
-		gridHeight = grid.length;
 	}
 
 	function removeRow() {
 		if (grid.length > 1) {
 			grid = grid.slice(0, -1);
-			gridHeight = grid.length;
 		}
 	}
 
 	function addColumn() {
 		grid = grid.map(row => [...row, StateKind.EMPTY]);
-		gridWidth = grid[0].length;
 	}
 
 	function removeColumn() {
 		if (grid[0].length > 1) {
 			grid = grid.map(row => row.slice(0, -1));
-			gridWidth = grid[0].length;
 		}
 	}
 </script>
