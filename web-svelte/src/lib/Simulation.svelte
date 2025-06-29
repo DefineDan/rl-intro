@@ -13,6 +13,8 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import Plots from './Plots.svelte';
 
+	let { agentType = AgentType.Q_LEARNING } = $props();
+
 	let grid = $state(JSON.parse(JSON.stringify(initialGrid)));
 	let mode = $state(GridMode.CONFIG);
 	let selectedStateKind = $state(StateKind.EMPTY);
@@ -20,8 +22,8 @@
 	let agentValues = $state(null);
 	let agentVisits = $state(null);
 	let agentConfig = $state({
-		agentType: AgentType.EXPECTED_SARSA,
-		learningRate: 0.3,
+		agentType: agentType,
+		learningRate: 0.2,
 		discount: 1.0,
 		epsilon: 0.1
 	});
@@ -232,6 +234,8 @@
 	}
 	.sim-container {
 		padding: 1rem;
+		margin-top: 1rem;
+		margin-bottom: 1rem;
 	}
 
 	.config-controls-row button{

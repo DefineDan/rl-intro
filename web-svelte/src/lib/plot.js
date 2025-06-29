@@ -1,7 +1,7 @@
 import Plotly from 'plotly.js-dist-min'
 
 
-function plotCumulativeReward(cumulativeReward, containerId = "reward-plot") {
+function plotCumulativeReward(cumulativeReward, containerId) {
   const globalStepIdx = cumulativeReward.columns.indexOf("global_step");
   if (globalStepIdx === -1) {
     console.error("global_step column not found in cumulativeReward");
@@ -36,7 +36,7 @@ function plotCumulativeReward(cumulativeReward, containerId = "reward-plot") {
   Plotly.newPlot(containerId, traces, layout, {responsive: true});
 }
 
-function plotEpisodicRewards(episodicRewards, containerId = "episodic-reward-plot") {
+function plotEpisodicRewards(episodicRewards, containerId) {
   const episodeIdx = episodicRewards.columns.indexOf("episode");
   const rewardIdx = episodicRewards.columns.indexOf("reward");
   if (episodeIdx === -1 || rewardIdx === -1) {
