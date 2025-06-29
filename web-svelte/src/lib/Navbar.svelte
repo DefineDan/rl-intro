@@ -12,6 +12,12 @@
         <li class="nav-item">
           <a class="nav-link" href="/tabular-methods">Tabular Methods</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/model-based-methods">Model-based RL</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/function-approximation">Function Approximation</a>
+        </li>
       </ul>
     </div>
   </div>
