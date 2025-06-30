@@ -5,13 +5,6 @@
   import { AgentType } from "../../lib/constants";
   import Grid from "$lib/Grid.svelte";
   import { initialGrid } from "$lib/constants.js";
-
-  let qLearningMath =
-    "Q(s,a) \\leftarrow Q(s,a) + \\alpha \\left( r + \\gamma \\max_{a'} Q(s', a') - Q(s,a) \\right)";
-  let sarsaMath =
-    "Q(s,a) \\leftarrow Q(s,a) + \\alpha \\left( r + \\gamma Q(s', a') - Q(s,a) \\right)";
-  let expectedSarsaMath =
-    "Q(s,a) \\leftarrow Q(s,a) + \\alpha \\left( r + \\gamma \\sum_{a'} \\pi(a'|s') Q(s', a') - Q(s,a) \\right)";
 </script>
 
 <h1>Tabular Reinforcement Learning Methods</h1>
@@ -87,36 +80,52 @@
   as it highlights the important <b>exploration exploitation tradeoff</b> in RL
   nicely. Other policies, such as softmax action selection or Upper Confidence
   Bound (UCB) offer alternatives to balance this tradeoff. For the ε-greedy
-  policy the agent chooses a random action with probability <Latex
-    math="\epsilon"
-  /> (exploration) otherwise it will take the action with the currently highest Q-value,
+  policy the agent chooses a random action with probability <Latex math="\epsilon"/> 
+  (exploration) otherwise it will take the action with the currently highest Q-value,
   the greedy action (exploitation).
   <Latex
-    math={"\\pi(a|s) = \\begin{cases}1 - \\epsilon + \\frac{\\epsilon}{|A|} & \\text{if } a = \\arg\\max_{a'} Q(s,a') \\\\ \\frac{\\epsilon}{|A|} & \\text{otherwise}\\end{cases}"}
+    math={"\\pi(a|s) = \\begin{cases}1 - \\epsilon + \\frac{\\epsilon}{|A|} & \\text{if } a = \\argmax_{a'} Q(s,a') \\\\ \\frac{\\epsilon}{|A|} & \\text{otherwise}\\end{cases}"}
     displayMode
   />
 </p>
 
-<h3>Q-Learning</h3>
-
-<p>
-  <Latex math={qLearningMath} displayMode />
-</p>
-<Simulation agentType={AgentType.Q_LEARNING} />
-
 <h2>Sarsa</h2>
 
 <p>
-  <Latex math={sarsaMath} displayMode />
+	Sarsa is an <b>on-policy</b> control method and got its name from the elements used to compute the update. We call it on-policy because it uses the current policy <Latex math={"\\pi(a|s)"} /> to select the next action <Latex math={"a'"} />. Sarsa can find an optimal policy <Latex math={"\\pi^*"} /> by greedifying towards the end of the learning process, but it will always follow the current policy during learning. With sampling <Latex math="a' \sim \pi" />, the update rule follows as:
 </p>
+<Latex math={"Q(s,a) \\leftarrow Q(s,a) + \\alpha \\left( r + \\gamma Q(s', a') - Q(s,a) \\right)"} displayMode />
+
 <Simulation agentType={AgentType.SARSA} />
 
-<h2>Expected Sarsa</h2>
+<h3>Q-Learning</h3>
+<p>
+	Q-Learning is an <b>off-policy</b> control method, meaning it can learn the optimal policy (the target policy) <Latex math={"\\pi^*"} /> while following a different policy <Latex math={"\\pi^*"}/> (the behaviour policy). Here the target policy is a greedy policy, which is given the correct Q-values, an optimal policy.
+</p>
+<Latex math={"Q(s,a) \\leftarrow Q(s,a) + \\alpha \\left( r + \\gamma \\max_{a'} Q(s', a') - Q(s,a) \\right)"} displayMode />
 
 <p>
-  <Latex math={expectedSarsaMath} displayMode />
+	You might observe that Q-learning takes a riskier path towards the terminal state, as it is not accounting
+	for the explorative actions of the behavior policy. This results in lower rewards during the learning process, but in the end it will find the optimal policy.
 </p>
+
+<Simulation agentType={AgentType.Q_LEARNING} />
+
+<h3>Expected Sarsa</h3>
+<p>
+	Expected Sarsa uses the expected value under the policy <Latex math="pi"/> to compute updates
+	and thereby is not affected by the sampling variance like Sarsa. While in expectation they learn the same, expected Sarsa is usually more robust at the cost of computation. Sarsa can be used for both on-policy and off-policy learning, as <Latex math="\pi"/> can be different from the policy we choose
+	to select the next action <Latex math="a' \sim \pi_b"/>. We can see expected Sarsa as a generalization
+	of Q-learning where <Latex math={"\\pi = \\pi_{greedy}"}./>
+</p>
+<Latex math={"Q(s,a) \\leftarrow Q(s,a) + \\alpha \\left( r + \\gamma \\sum_{a'} \\pi(a'|s') Q(s', a') - Q(s,a) \\right)"} displayMode />
+
 <Simulation agentType={AgentType.EXPECTED_SARSA} />
+
+<h2>Implementation</h2>
+<p>
+	The agent implementations are fairly simple. Take a look here at the code at <a href="https://github.com/DefineDan/rl-intro/tree/main/rl_intro/agent">rl-intro on GitHub</a>.
+</p>
 
 <style>
   .gridworld-section {
