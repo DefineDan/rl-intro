@@ -5,26 +5,25 @@ from rl_intro.agent.agent_sarsa import AgentSarsa
 from rl_intro.environment.gridworld import GridWorld, GridWorldConfig
 from rl_intro.agent.policy import EpsilonGreedyPolicy, EpsilonGreedyConfig
 from rl_intro.simulation.experiment import Experiment, ExperimentConfig
-from rl_intro.utils.visualize import grid_str
 from rl_intro.environment.gridworld import StateKind
-from typing import List, Literal, Optional
-from enum import StrEnum
 from rl_intro.evaluation.analyze import analyze_experiment
+from typing import List, Optional
+from enum import StrEnum
 from dataclasses import asdict
 
-
-########### ! GLOBAL VARIABLES FOR INTERFACING WITH PYODIDE
-global_environment: Optional[GridWorld] = None
-global_agent: Optional[Agent] = None
-global_experiment: Optional[Experiment] = None
-########### ! GLOBAL VARIABLES FOR INTERFACING WITH PYODIDE
-
+# Global registry for active simulations
+_simulation_registry: dict[str, "Simulation"] = {}
 
 class AgentType(StrEnum):
     EXPECTED_SARSA = "expected_sarsa"
     Q_LEARNING = "q_learning"
     SARSA = "sarsa"
 
+class Simulation:
+    def __init__(self, grid, agent_config, experiment_config):
+        self.env = create_gridworld(grid)
+        self.agent = create_agent(agent_config, self.env)
+        self.experiment = create_experiment(experiment_config, self.agent, self.env)
 
 def create_gridworld(grid: List[List], seed: Optional[int] = None) -> GridWorld:
     w = len(grid[0])
@@ -56,76 +55,81 @@ def create_gridworld(grid: List[List], seed: Optional[int] = None) -> GridWorld:
             else:
                 raise ValueError(f"Invalid cell value {cell} at ({i}, {j})")
 
-    global global_environment
-    global_environment = GridWorld(env_config)
-
-    return global_environment
+    return GridWorld(env_config)
 
 
-def create_agent(config: dict) -> Agent:
-    if global_environment is None:
-        raise ValueError("Environment not initialized. Cannot create agent")
+def create_agent(config: dict, env: GridWorld) -> Agent:
     policy = EpsilonGreedyPolicy(
         EpsilonGreedyConfig(epsilon=config.get("epsilon", 0.1))
     )
     agent_config = AgentConfig(
-        n_states=len(global_environment.state_space),
-        n_actions=len(global_environment.action_space),
+        n_states=len(env.state_space),
+        n_actions=len(env.action_space),
         learning_rate=config.get("learning_rate", 0.1),
         discount=config.get("discount", 1.0),
         random_seed=42,
     )
     agent_type = AgentType(config.get("agent_type", "expected_sarsa"))
 
-    global global_agent
     if agent_type == AgentType.EXPECTED_SARSA:
-        global_agent = AgentExpectedSarsa(agent_config, policy)
+        return AgentExpectedSarsa(agent_config, policy)
     elif agent_type == AgentType.Q_LEARNING:
-        global_agent = AgentQLearning(agent_config, policy)
+        return AgentQLearning(agent_config, policy)
     elif agent_type == AgentType.SARSA:
-        global_agent = AgentSarsa(agent_config, policy)
+        return AgentSarsa(agent_config, policy)
     else:
         raise ValueError(f"Invalid agent type: {agent_type}")
-    return global_agent
 
 
-def create_experiment(config: dict) -> Experiment:
+def create_experiment(config: dict, agent: Agent, env: GridWorld) -> Experiment:
     experiment_config = ExperimentConfig(
         n_episodes=config.get("n_episodes", 500),
         max_steps=config.get("max_steps", 200),
     )
-    if global_agent is None or global_environment is None:
-        raise ValueError("Agent or environment not initialized")
-    global global_experiment
-    global_experiment = Experiment(global_agent, global_environment, experiment_config)
-    return global_experiment
+    return Experiment(agent, env, experiment_config)
 
 
-def step_experiment():
-    global global_experiment
-    if global_experiment is None:
-        raise ValueError("Experiment not initialized.")
+def create_simulation(sim_id, grid, agent_config, experiment_config):
+    sim = Simulation(grid, agent_config, experiment_config)
+    _simulation_registry[sim_id] = sim
+    return sim_id
 
-    step_log = global_experiment.step()
+def get_simulation(sim_id) -> Simulation:
+    if sim_id not in _simulation_registry:
+        raise ValueError(f"Simulation with id {sim_id} not found.")
+    return _simulation_registry[sim_id]
+
+def step_experiment(sim_id):
+    sim = get_simulation(sim_id)
+    step_log = sim.experiment.step()
     result = {
         "step_log": asdict(step_log),
-        "position": get_current_position(),
-        "values": get_current_values(),
+        "position": get_current_position(sim_id),
+        "values": get_current_values(sim_id),
     }
     return result
 
+def run_full_experiment(sim_id):
+    sim = get_simulation(sim_id)
+    return sim.experiment.run()
 
-def run_full_experiment():
-    if global_experiment is None:
-        raise ValueError("Experiment not initialized")
-    return global_experiment.run()
+def get_current_values(sim_id):
+    sim = get_simulation(sim_id)
+    return sim.agent.get_greedy_values()
 
+def get_grid_shape(sim_id):
+    sim = get_simulation(sim_id)
+    return (sim.env.height, sim.env.width)
 
-def analyze_experiment_logs():
-    if global_experiment is None or global_environment is None:
-        raise ValueError("Experiment not initialized")
-    h, w = get_grid_shape()
-    analysis = analyze_experiment(global_experiment.log, h, w)
+def get_current_position(sim_id):
+    sim = get_simulation(sim_id)
+    position = sim.env.get_position(sim.env.state)
+    return {"row": int(position[0]), "col": int(position[1])}
+
+def analyze_experiment_logs(sim_id):
+    sim = get_simulation(sim_id)
+    h, w = get_grid_shape(sim_id)
+    analysis = analyze_experiment(sim.experiment.log, h, w)
     return {
         "cumulative_reward": analysis.cumulative_reward.to_json(orient="split"),
         "episodic_rewards": analysis.episodic_rewards.to_json(orient="split"),
@@ -133,30 +137,6 @@ def analyze_experiment_logs():
         "visits": analysis.visit_matrix.flatten().astype(float),
     }
 
-
-def get_current_values():
-    if global_agent is None:
-        raise ValueError("Cannot get values of None agent")
-    return global_agent.get_greedy_values()
-
-
-def get_grid_shape():
-    if global_environment is None:
-        raise ValueError("Cannot get shape of None env")
-    return (global_environment.height, global_environment.width)
-
-
-def get_current_position():
-    if global_environment is None:
-        raise ValueError("Cannot get position of None env")
-    position = global_environment.get_position(global_environment.state)
-    return {"row": int(position[0]), "col": int(position[1])}
-
-
-def reset_globals():
-    global global_environment
-    global global_agent
-    global global_experiment
-    global_environment = None
-    global_agent = None
-    global_experiment = None
+def reset_simulation(sim_id):
+    if sim_id in _simulation_registry:
+        del _simulation_registry[sim_id]

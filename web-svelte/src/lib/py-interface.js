@@ -9,17 +9,15 @@ export async function getPyodide() {
             const pyodide = await loadPyodide({
                 indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.27.7/full/',
             });
-
             // Install packages once
-            console.log('Installing packages...');
+            console.log('Installing rl_intro packages...');
             await pyodide.loadPackage(['micropip']);
-            // The wheel path is relative to the built app's root
             await pyodide.runPythonAsync(`
-        import micropip
-        await micropip.install("/py/rl_intro-0.1.1-py3-none-any.whl")
-        import rl_intro
-      `);
-            const response = await fetch('/py/simulation.py');
+                import micropip
+                await micropip.install("/py/rl_intro-0.1.1-py3-none-any.whl")
+                import rl_intro
+            `);
+            const response = await fetch('/py/rl_intro_wrapper.py');
             const code = await response.text();
             await pyodide.runPythonAsync(code);
             console.log('Pyodide ready to go!');
@@ -45,42 +43,41 @@ export function getExperimentConfigForPython(experimentConfig) {
     };
 }
 
-export async function initializeSimulation(grid, agentConfig, experimentConfig) {
+export async function initializeSimulation(simId, grid, agentConfig, experimentConfig) {
     const pyodide = await getPyodide();
-    await pyodide.runPythonAsync('reset_globals()');
-
     const pyGridConfig = pyodide.toPy(grid);
     pyodide.globals.set('pyGridConfig', pyGridConfig);
-    await pyodide.runPythonAsync(`create_gridworld(pyGridConfig)`);
-
     const pyAgentConfig = pyodide.toPy(getAgentConfigForPython(agentConfig));
     pyodide.globals.set('pyAgentConfig', pyAgentConfig);
-    await pyodide.runPythonAsync(`create_agent(pyAgentConfig)`);
-
     const pyExperimentConfig = pyodide.toPy(getExperimentConfigForPython(experimentConfig));
     pyodide.globals.set('pyExperimentConfig', pyExperimentConfig);
-    await pyodide.runPythonAsync(`create_experiment(pyExperimentConfig)`);
+    await pyodide.runPythonAsync(`create_simulation('${simId}', pyGridConfig, pyAgentConfig, pyExperimentConfig)`);
 }
 
-export async function getCurrentPosition() {
+export async function getCurrentPosition(simId) {
     const pyodide = await getPyodide();
-    const position = await pyodide.runPythonAsync('get_current_position()');
+    const position = await pyodide.runPythonAsync(`get_current_position('${simId}')`);
     return position.toJs();
 }
 
-export async function stepExperiment() {
+export async function stepExperiment(simId) {
     const pyodide = await getPyodide();
-    const step_result = await pyodide.runPythonAsync('step_experiment()');
+    const step_result = await pyodide.runPythonAsync(`step_experiment('${simId}')`);
     return step_result.toJs({ dict_converter: Object.fromEntries });
 }
 
-export async function runFullExperiment() {
+export async function runFullExperiment(simId) {
     const pyodide = await getPyodide();
-    await pyodide.runPythonAsync('run_full_experiment()');
+    await pyodide.runPythonAsync(`run_full_experiment('${simId}')`);
 }
 
-export async function analyzeExperimentLogs() {
+export async function analyzeExperimentLogs(simId) {
     const pyodide = await getPyodide();
-    const analysis = await pyodide.runPythonAsync('analyze_experiment_logs()');
+    const analysis = await pyodide.runPythonAsync(`analyze_experiment_logs('${simId}')`);
     return analysis.toJs({ dict_converter: Object.fromEntries });
-} 
+}
+
+export async function resetSimulation(simId) {
+    const pyodide = await getPyodide();
+    await pyodide.runPythonAsync(`reset_simulation('${simId}')`);
+}

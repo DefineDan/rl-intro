@@ -2,10 +2,9 @@
     import { onMount } from "svelte";
     import { plotCumulativeReward, plotEpisodicRewards } from "./plot.js";
 
-    let { cumulativeReward, episodicRewards } = $props();
-    const uniqueId = Math.random().toString(36).substr(2, 9);
-    const rewardPlotId = `reward-plot-${uniqueId}`;
-    const episodicRewardPlotId = `episodic-reward-plot-${uniqueId}`;
+    let { cumulativeReward, episodicRewards, simId } = $props();
+    const rewardPlotId = `reward-plot-${simId}`;
+    const episodicRewardPlotId = `episodic-reward-plot-${simId}`;
     
     $effect(() => {
         plotCumulativeReward(cumulativeReward, rewardPlotId);

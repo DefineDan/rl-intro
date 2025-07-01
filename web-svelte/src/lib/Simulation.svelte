@@ -11,9 +11,12 @@
 	import SpeedControl from './ControlsSpeed.svelte';
 	import { faCheck } from '@fortawesome/free-solid-svg-icons';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import Plots from './Plots.svelte';
+	import { v4 as uuidv4 } from 'uuid';
+    import PlotReward from './PlotReward.svelte';
 
 	let { agentType = AgentType.Q_LEARNING } = $props();
+
+	const simId = uuidv4()
 
 	let grid = $state(JSON.parse(JSON.stringify(initialGrid)));
 	let mode = $state(GridMode.CONFIG);
@@ -63,8 +66,8 @@
 		output = 'Initializing simulation...';
 		mode = GridMode.VIEW
 		try {
-			await pyInterface.initializeSimulation(grid, agentConfig, experimentConfig);
-			agentPos = await pyInterface.getCurrentPosition();
+			await pyInterface.initializeSimulation(simId, grid, agentConfig, experimentConfig);
+			agentPos = await pyInterface.getCurrentPosition(simId);
 			output = 'Simulation initialized. Ready to step or run.';
 			isInitialized = true;
 		} catch (error) {
@@ -75,22 +78,25 @@
 
 	async function step() {
 		try {
-			const stepResult = await pyInterface.stepExperiment();
+			const stepResult = await pyInterface.stepExperiment(simId);
 			agentPos = stepResult.position;
 			agentValues = stepResult.values;
 			episodeNum = stepResult.step_log.episode
 			output = `Episode: ${episodeNum}, Step: ${
 				stepResult.step_log.step
-			}, Reward: ${stepResult.step_log.reward.toFixed(2)}`;
-
-			if (stepResult.step_log.terminal) {
-				output += ' (Episode finished)';
-				const results = await pyInterface.analyzeExperimentLogs();
-				cumulativeReward = JSON.parse(results.cumulative_reward);
-				episodicRewards = JSON.parse(results.episodic_rewards);
-				agentVisits = results.visits;
-			}
-		} catch (error) {
+				}, Reward: ${stepResult.step_log.reward.toFixed(2)}`;
+				
+				if (stepResult.step_log.terminal) {
+					output += ' (Episode finished)';
+					const results = await pyInterface.analyzeExperimentLogs(simId);
+					cumulativeReward = JSON.parse(results.cumulative_reward);
+					episodicRewards = JSON.parse(results.episodic_rewards);
+					agentVisits = results.visits;
+					if (episodeNum == experimentConfig.nEpisodes) {
+						pause()
+					}
+				}
+			} catch (error) {
 			output = `Error: ${error.message}`;
 			console.error(error);
 			pause();
@@ -111,31 +117,34 @@
 		}
 	}
 
-	function reset() {
+	async function reset() {
 		pause();
 		mode = GridMode.CONFIG;
+		episodeNum = 0;
 		agentPos = null;
 		agentValues = null;
-		output = 'Ready! Configure the grid and agent, then click Confirm to start.';
-		isInitialized = false;
+		agentVisits = null;
 		cumulativeReward = null;
 		episodicRewards = null;
+		isInitialized = false;
+		await pyInterface.resetSimulation(simId);
+		output = 'Ready! Configure the grid and agent, then click Confirm to start.';
 	}
 
 	async function runFullAnalysis() {
 		output = 'Running full analysis...';
 		try {
 			pause();
-			await pyInterface.initializeSimulation(grid, agentConfig, experimentConfig);
-			await pyInterface.runFullExperiment();
+			await pyInterface.initializeSimulation(simId, grid, agentConfig, experimentConfig);
+			await pyInterface.runFullExperiment(simId);
 
-			const results = await pyInterface.analyzeExperimentLogs();
+			const results = await pyInterface.analyzeExperimentLogs(simId);
 			cumulativeReward = JSON.parse(results.cumulative_reward);
 			episodicRewards = JSON.parse(results.episodic_rewards);
 			agentValues = results.values;
 			agentVisits = results.visits;
 
-			agentPos = await pyInterface.getCurrentPosition();
+			agentPos = await pyInterface.getCurrentPosition(simId);
 			episodeNum = experimentConfig.nEpisodes;
 			output = `Experiment complete!`;
 		} catch (error) {
@@ -188,7 +197,7 @@
 		</div>
 	{/if}
 	{#if cumulativeReward && episodicRewards}
-		<Plots {cumulativeReward} {episodicRewards} />
+		<PlotReward {cumulativeReward} {episodicRewards} {simId}/>
 	{/if}
 	{#if mode !== GridMode.CONFIG && isInitialized}
 		<div class="progress mb-3">
