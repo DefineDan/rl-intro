@@ -88,6 +88,7 @@
 				const results = await pyInterface.analyzeExperimentLogs();
 				cumulativeReward = JSON.parse(results.cumulative_reward);
 				episodicRewards = JSON.parse(results.episodic_rewards);
+				agentVisits = results.visits;
 			}
 		} catch (error) {
 			output = `Error: ${error.message}`;
@@ -115,7 +116,7 @@
 		mode = GridMode.CONFIG;
 		agentPos = null;
 		agentValues = null;
-		output = 'Ready! Configure the grid and click Confirm Configuration to start.';
+		output = 'Ready! Configure the grid and agent, then click Confirm to start.';
 		isInitialized = false;
 		cumulativeReward = null;
 		episodicRewards = null;
@@ -127,15 +128,16 @@
 			pause();
 			await pyInterface.initializeSimulation(grid, agentConfig, experimentConfig);
 			await pyInterface.runFullExperiment();
-			const results = await pyInterface.analyzeExperimentLogs();
 
+			const results = await pyInterface.analyzeExperimentLogs();
 			cumulativeReward = JSON.parse(results.cumulative_reward);
 			episodicRewards = JSON.parse(results.episodic_rewards);
+			agentValues = results.values;
+			agentVisits = results.visits;
 
 			agentPos = await pyInterface.getCurrentPosition();
-			agentValues = results.values;
 			episodeNum = experimentConfig.nEpisodes;
-			output = 'Experiment complete! Analysis done.';
+			output = `Experiment complete!`;
 		} catch (error) {
 			output = `Error: ${error.message}`;
 			console.error(error);
@@ -169,8 +171,8 @@
 	<div class="sim-layout">
 		<div class="sim-left">
 			<div class="grid-center">
-				<ModeToggle {mode} {GridMode} {agentValues} setMode={newMode => mode = newMode} />
-				<Grid {grid} {mode} {agentPos} {agentValues} onclick={updateCellKind} editable={mode === GridMode.CONFIG} />
+				<ModeToggle {mode} {GridMode} {agentValues} {agentVisits} setMode={newMode => mode = newMode} />
+				<Grid {grid} {mode} {agentPos} {agentValues} {agentVisits} onclick={updateCellKind} editable={mode === GridMode.CONFIG} />
 			</div>
 		</div>
 		<div class="sim-right">

@@ -1,10 +1,10 @@
 <script>
   import { GridMode } from "./constants.js";
-  let { mode, agentValues, setMode } = $props();
+  let { mode, agentValues, agentVisits, setMode } = $props();
 
   const tabs = [
     {
-      label: "Grid Config",
+      label: "Configure",
       mode: GridMode.CONFIG,
       isDisabled: () => false,
       onClick: () => setMode(GridMode.CONFIG),
@@ -25,11 +25,11 @@
       tabIndex: () => agentValues ? (mode === GridMode.VALUES ? 0 : -1) : -1,
     },
     {
-      label: "Visits",
+      label: "Agent Visits",
       mode: GridMode.VISITS,
-      isDisabled: () => true,
-      onClick: () => {},
-      tabIndex: () => -1,
+      isDisabled: () => !agentVisits,
+      onClick: () => agentVisits && setMode(GridMode.VISITS),
+      tabIndex: () => agentVisits ? (mode === GridMode.VISITS ? 0 : -1) : -1,
     },
   ];
 </script>

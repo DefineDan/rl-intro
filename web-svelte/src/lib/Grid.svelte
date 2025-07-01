@@ -1,11 +1,12 @@
 <script>
     import { StateKind, stateBootstrapClasses, GridMode } from './constants.js';
-    import { interpolateViridis } from 'd3-scale-chromatic';
+    import { interpolateViridis, interpolateInferno } from 'd3-scale-chromatic';
 
     let {
         grid,
         mode = GridMode.CONFIG,
         agentValues = null,
+        agentVisits = null,
         agentPos = null,
         onclick,
     } = $props()
@@ -14,20 +15,22 @@
 
 
     function getCellStyle(kind, row, col) {
-        if (mode === GridMode.VALUES && agentValues) {
+        const data = (mode === GridMode.VALUES && agentValues) ? agentValues : 
+                     (mode === GridMode.VISITS && agentVisits) ? agentVisits : null;    
+        if (data) {
             const idx = row * gridWidth + col;
-            const value = agentValues[idx];
-            const min = Math.min(...agentValues);
-            const max = Math.max(...agentValues);
-            const norm = (value - min) / (max - min || 1);
-            const color = interpolateViridis(norm);
+            const value = data[idx] || 0;
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const norm = max > min ? (value - min) / (max - min) : 0;
+            const color = mode === GridMode.VALUES ? interpolateViridis(norm) : interpolateInferno(norm);
             return `background: ${color}; border: 2px solid ${color}; color: #fff;`;
         }
         return '';
     }
 
     function getCellClass(kind) {
-        if (mode === GridMode.VALUES && agentValues) {
+        if (mode === GridMode.VALUES && agentValues || mode === GridMode.VISITS && agentVisits) {
             return "btn btn-outline-primary";
         }
         return `btn ${stateBootstrapClasses[kind] || "btn-secondary"}`;
@@ -40,6 +43,10 @@
         if (mode === GridMode.VALUES && agentValues) {
             const idx = row * gridWidth + col;
             return agentValues[idx].toFixed(1);
+        }
+        if (mode === GridMode.VISITS && agentVisits) {
+            const idx = row * gridWidth + col;
+            return agentVisits[idx] || 0;
         }
         const kind = grid[row][col];
         switch (kind) {

@@ -130,7 +130,7 @@ def analyze_experiment_logs():
         "cumulative_reward": analysis.cumulative_reward.to_json(orient="split"),
         "episodic_rewards": analysis.episodic_rewards.to_json(orient="split"),
         "values": analysis.final_values.flatten(),
-        "visits": analysis.visit_matrix.flatten(),
+        "visits": analysis.visit_matrix.flatten().astype(float),
     }
 
 
