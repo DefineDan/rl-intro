@@ -126,6 +126,23 @@
 <p>
 	The agent implementations are fairly simple. Take a look here at the code at <a href="https://github.com/DefineDan/rl-intro/tree/main/rl_intro/agent">rl-intro on GitHub</a>.
 </p>
+<CodeBlock
+code="def learn(
+        self, state: State, reward: Reward, terminal: Terminal, action: Action
+    ) -> None:
+        if terminal:
+            td_error = reward - self.q[self.last_state, self.last_action]
+        else:
+            td_error = (
+                reward
+                + self.config.discount * np.max(self.q[state, :])
+                - self.q[self.last_state, self.last_action]
+            )
+        self.q[self.last_state, self.last_action] += (
+            self.config.learning_rate * td_error
+        )"
+  sourceUrl="https://github.com/DefineDan/rl-intro/blob/main/rl_intro/agent/agent_q_learning.py"
+  />
 
 <style>
   .gridworld-section {
