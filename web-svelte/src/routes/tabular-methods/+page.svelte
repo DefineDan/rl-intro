@@ -56,8 +56,8 @@
     >online learning</b
   >). The methods learn the <b>action-value function</b>
   <Latex math="Q(s,a)" /> predicting the expected future reward (return) when being
-  in state <Latex math="s" /> and taking action <Latex math="a" />
-  and is used by our policy to decide on the next action to take. The methods presented
+  in state <Latex math="s" /> and taking action <Latex math="a" />.
+  It is used by the policy to decide on the next action to take. The methods presented
   here are <b>model-free</b>, so they don't attempt to model the environment
   dynamics and they are <b>bootstrapping</b> as they update Q-values using
   learned Q-value estimates. The general update rule or learning step where 
@@ -66,7 +66,7 @@
   <Latex math="r" /> is the immediate reward, 
   <Latex math="\gamma" /> is the discount factor and 
   <Latex math="V(s')" /> is the value of the next state can be defined as:
-  <Latex math={"\\delta_{TD} = r + \\gamma [V(s') - Q(s,a)]"} displayMode />
+  <Latex math={"\\delta_{TD} = r + \\gamma V(s') - Q(s,a)"} displayMode />
    <Latex
     math={"Q(s,a) \\leftarrow Q(s,a) + \\alpha \\delta_{TD}"}
     displayMode
@@ -113,7 +113,7 @@
 
 <h3>Expected Sarsa</h3>
 <p>
-	Expected Sarsa uses the expected value under the policy <Latex math="pi"/> to compute updates
+	Expected Sarsa uses the expected value under the policy <Latex math="\pi"/> to compute updates
 	and thereby is not affected by the sampling variance like Sarsa. While in expectation they learn the same, expected Sarsa is usually more robust at the cost of computation. Sarsa can be used for both on-policy and off-policy learning, as <Latex math="\pi"/> can be different from the policy we choose
 	to select the next action <Latex math="a' \sim \pi_b"/>. We can see expected Sarsa as a generalization
 	of Q-learning where <Latex math={"\\pi = \\pi_{greedy}"}./>
