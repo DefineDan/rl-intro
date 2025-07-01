@@ -10,6 +10,13 @@ dependencies = [
     "tqdm>=4.67.1",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "ipykernel>=6.29.5",
+    "matplotlib>=3.10.3",
+    "pytest>=8.4.0",
+]
+
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
