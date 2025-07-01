@@ -42,7 +42,10 @@
         max-width: 66rem;
         margin-left: auto;
         margin-right: auto;
-        text-align: center;
         color: #888;
+    }
+
+    .footer-content p {
+        text-align: center;
     }
 </style>
