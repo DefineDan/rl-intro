@@ -24,3 +24,6 @@ build: build-python build-web
 
 run-web:
 	cd $(WEB_DIR) && npm run dev -- --open
+
+test-python:
+	pytest tests/
