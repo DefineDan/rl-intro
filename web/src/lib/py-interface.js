@@ -1,4 +1,7 @@
 import { loadPyodide } from "pyodide";
+import { base } from "$app/paths";
+
+// TODO: put paths into a config file
 
 let pyodidePromise = null;
 
@@ -14,10 +17,10 @@ export async function getPyodide() {
       await pyodide.loadPackage(["micropip"]);
       await pyodide.runPythonAsync(`
                 import micropip
-                await micropip.install("/py/rl_intro-0.1.1-py3-none-any.whl")
+                await micropip.install("${base}/py/rl_intro-0.1.1-py3-none-any.whl")
                 import rl_intro
             `);
-      const response = await fetch("/py/rl_intro_wrapper.py");
+      const response = await fetch(`${base}/py/rl_intro_wrapper.py`);
       const code = await response.text();
       await pyodide.runPythonAsync(code);
       console.log("Pyodide ready to go!");
