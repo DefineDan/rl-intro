@@ -10,20 +10,17 @@ This is an interactive playground for exploring basic concepts of Reinforcement 
 - **Interactive Web Interface**: Run RL experiments directly in your browser.
 - **Pure Python Core**: Reusable RL algorithms implemented in typed Python.
 - **No Backend Required**: Everything runs client-side using WebAssembly.
-- **Svelte Frontend**: Compiled, component based frontend using [Svelte](https://svelte.dev/).
-- **Static Hosting**: Easily deployable to GitHub Pages or any static host like Vercel or Netlify.
 
 ## Architecture
 
 - **Python Package**: Core RL algorithms implemented as a typed Python package [rl_intro](rl_intro/)
 - **WebAssembly**: Python code runs in the browser via [Pyodide](https://pyodide.org/)
-- **Svelte Frontend**: Fast, compiled frontend using [Svelte](https://svelte.dev/)
+- **Svelte Frontend**: Fast, compiled [web](web/) frontend using [Svelte](https://svelte.dev/)
 - **Static Hosting**: Easily deployable to GitHub Pages or any static host like Vercel or Netlify
 
 ## Quick Start
 
 ### Prerequisites
-
 - Python 3.11+
 - Node.js and npm
 - [uv](https://docs.astral.sh/uv/) (recommended) or pip
@@ -40,15 +37,11 @@ make setup
 
 ### Development
 
-#### Run the Web Interface
-
 ```bash
 make run-web
 ```
 
 - Starts the development server and opens the app in your browser
-
-#### Build the Project
 
 ```bash
 make build
