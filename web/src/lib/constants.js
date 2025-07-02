@@ -41,7 +41,7 @@ export const AgentType = {
   EXPECTED_SARSA: "expected_sarsa",
   Q_LEARNING: "q_learning",
   SARSA: "sarsa",
-}; 
+};
 
 //   --bs-primary: #6f42c1;
 //   --bs-secondary: #ea39b8;
