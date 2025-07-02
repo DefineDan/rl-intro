@@ -1,6 +1,6 @@
 <script>
   import Simulation from "$lib/Simulation.svelte";
-  import Latex from "$lib/LaTeX.svelte";
+  import Latex from "$lib/Latex.svelte";
   import CodeBlock from "$lib/CodeBlock.svelte";
   import { AgentType } from "../../lib/constants";
   import Grid from "$lib/Grid.svelte";

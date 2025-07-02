@@ -1,6 +1,6 @@
 <script>
   import Simulation from "$lib/Simulation.svelte";
-  import Latex from "$lib/LaTeX.svelte";
+  import Latex from "$lib/Latex.svelte";
 </script>
 
 <h1>An Interactive Introduction to Reinforcement Learning</h1>

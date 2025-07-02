@@ -1,5 +1,5 @@
 <script>
-  import Latex from "$lib/LaTeX.svelte";
+  import Latex from "$lib/Latex.svelte";
 </script>
 
 <h1>Function Approximation in Reinforcement Learning</h1>
