@@ -1,6 +1,13 @@
 # An Interactive Introduction to Reinforcement Learning
 
 
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Demo-brightgreen?logo=github)](https://definedan.github.io/rl-intro)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python)](https://python.org)
+[![Svelte](https://img.shields.io/badge/Svelte-Frontend-orange?logo=svelte)](https://svelte.dev)
+[![WebAssembly](https://img.shields.io/badge/WebAssembly-Pyodide-purple?logo=webassembly)](https://pyodide.org)
+
+**[Try it out here!](https://definedan.github.io/rl-intro)**
+
 This is an interactive playground for exploring basic concepts of Reinforcement Learning. While there are excellent theoretical explanations, most notably [Reinforcement Learning: An Introduction by Sutton and Barto](http://incompleteideas.net/book/the-book-2nd.html), this project aims to provide some intuition on basic algorithms, parameters and their shortcomings.
 
 [![Demo](docs/demo.gif)](docs/demo.gif)
