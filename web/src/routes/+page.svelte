@@ -1,6 +1,7 @@
 <script>
   import Simulation from "$lib/Simulation.svelte";
   import Latex from "$lib/Latex.svelte";
+  import { base } from '$app/paths';
 </script>
 
 <h1>An Interactive Introduction to Reinforcement Learning</h1>
@@ -24,7 +25,7 @@
     aria-label="Close"
   ></button>
   Start here at
-  <a href="/tabular-methods" class="alert-link">Tabular Methods</a> or read below
+  <a href="{base}/tabular-methods" class="alert-link">Tabular Methods</a> or read below
   if you're interested in implementation details.
 </div>
 
@@ -59,6 +60,6 @@
 <h3>Playground</h3>
 Have a go at it! You can build your environment and configure the agent. For a bit
 of background head over to
-<a href="/tabular-methods"> Tabular Methods</a>.
+<a href="{base}/tabular-methods"> Tabular Methods</a>.
 
 <Simulation id="home-simulation" />

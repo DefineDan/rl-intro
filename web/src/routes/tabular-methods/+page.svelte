@@ -5,6 +5,7 @@
   import { AgentType } from "../../lib/constants";
   import Grid from "$lib/Grid.svelte";
   import { initialGrid } from "$lib/constants.js";
+  import { base } from '$app/paths';
 </script>
 
 <h1>Tabular Reinforcement Learning Methods</h1>
@@ -16,7 +17,7 @@
   that category because the state space is either too large (think games like
   chess or go), or state and action space might even be continuous (think robot
   control). While
-  <a href="/function-approximation"> Function Approximation</a>
+  <a href="{base}/function-approximation"> Function Approximation</a>
   can be used in those cases, for now we stick to a conveniently <b>discrete</b>
   and <b>small</b> <b>state-action space</b>.
 </p>

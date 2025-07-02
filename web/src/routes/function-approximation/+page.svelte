@@ -1,5 +1,6 @@
 <script>
   import Latex from "$lib/Latex.svelte";
+  import { base } from '$app/paths';
 </script>
 
 <h1>Function Approximation in Reinforcement Learning</h1>
@@ -12,7 +13,7 @@
       spaces in reinforcement learning. Starting with state aggregation and tile
       coding, we'll then move on to linear function approximation and neural
       networks. For now, take a look at <a
-        href="/tabular-methods"
+        href="{base}/tabular-methods"
         class="alert-link">Tabular Methods</a
       > to get started with the basics of reinforcement learning.
     </p>

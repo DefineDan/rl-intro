@@ -1,5 +1,6 @@
 <script>
   import Latex from "$lib/Latex.svelte";
+  import { base } from '$app/paths';
 </script>
 
 <h1>Model-based Reinforcement Learning</h1>
@@ -13,7 +14,7 @@
       the model to simulate future actions and their outcomes, and thus learn
       from simulated experience. We'll take a look at methods like Dyna-Q and
       more. For now take a look at
-      <a href="/tabular-methods" class="alert-link">Tabular Methods</a>
+      <a href="{base}/tabular-methods" class="alert-link">Tabular Methods</a>
       to get started with the basics of reinforcement learning.
     </p>
   </div>

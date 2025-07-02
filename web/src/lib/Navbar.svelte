@@ -1,6 +1,10 @@
+<script>
+  import { base } from '$app/paths';
+</script>
+
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/">RL Intro</a>
+    <a class="navbar-brand" href="{base}/">RL Intro</a>
     <button
       class="navbar-toggler"
       type="button"
@@ -15,16 +19,16 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
-          <a class="nav-link" href="/">Home</a>
+          <a class="nav-link" href="{base}/">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/tabular-methods">Tabular Methods</a>
+          <a class="nav-link" href="{base}/tabular-methods">Tabular Methods</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/model-based-methods">Model-based RL</a>
+          <a class="nav-link" href="{base}/model-based-methods">Model-based RL</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/function-approximation"
+          <a class="nav-link" href="{base}/function-approximation"
             >Function Approximation</a
           >
         </li>
